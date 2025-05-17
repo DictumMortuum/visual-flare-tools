@@ -13,13 +13,13 @@ interface ToolCardProps {
 const ToolCard = ({ id, title, description, icon, category }: ToolCardProps) => {
   return (
     <Link to={`/tools/${id}`} className="block group">
-      <Card className="h-full transition-all hover:border-primary/20 tool-card-shadow">
-        <CardHeader className="space-y-1">
+      <Card className="h-full transition-all border-border/40 hover:border-primary/40 hover:shadow-md overflow-hidden">
+        <CardHeader className="space-y-2">
           <div className="flex items-center justify-between">
-            <div className="p-2 bg-primary/10 rounded-md text-primary">
+            <div className="p-2.5 bg-primary/10 rounded-xl text-primary">
               {icon}
             </div>
-            <div className="text-xs font-medium text-muted-foreground px-2 py-1 bg-muted rounded-md">
+            <div className="text-xs font-medium text-muted-foreground px-2.5 py-1 bg-muted rounded-full">
               {category}
             </div>
           </div>

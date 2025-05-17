@@ -8,7 +8,7 @@ const Index = () => {
         <h1 className="text-4xl font-bold tracking-tight sm:text-5xl mb-4 bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70">
           Developer Tools
         </h1>
-        <p className="text-lg text-muted-foreground">
+        <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
           A collection of free, simple, and useful web-based tools for developers, designers, and everyone else.
         </p>
       </div>

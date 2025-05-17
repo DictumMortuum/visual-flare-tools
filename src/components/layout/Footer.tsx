@@ -3,24 +3,24 @@ import { Link } from "react-router-dom";
 
 const Footer = () => {
   return (
-    <footer className="border-t py-6 md:py-0">
-      <div className="container flex flex-col items-center justify-between gap-4 md:h-16 md:flex-row">
+    <footer className="border-t py-8">
+      <div className="container flex flex-col items-center justify-between gap-6 md:flex-row md:gap-4">
         <p className="text-sm text-muted-foreground md:text-base">
           &copy; {new Date().getFullYear()} DevTools. All rights reserved.
         </p>
         
-        <div className="flex flex-col md:flex-row gap-4 md:items-center text-sm text-muted-foreground">
-          <Link to="/about" className="hover:underline">
+        <div className="flex gap-8 md:items-center text-sm text-muted-foreground">
+          <Link to="/about" className="hover:text-primary transition-colors">
             About
           </Link>
-          <Link to="/" className="hover:underline">
+          <Link to="/" className="hover:text-primary transition-colors">
             Tools
           </Link>
           <a
             href="https://github.com/DictumMortuum/tools"
             target="_blank"
             rel="noreferrer"
-            className="hover:underline"
+            className="hover:text-primary transition-colors"
           >
             GitHub
           </a>

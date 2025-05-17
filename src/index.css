@@ -82,12 +82,20 @@
 
 @layer utilities {
   .tool-card-shadow {
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
     transition: all 0.3s ease;
   }
   
   .tool-card-shadow:hover {
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    transform: translateY(-2px);
+    box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.1), 0 4px 12px -2px rgba(0, 0, 0, 0.05);
+    transform: translateY(-1px);
+  }
+  
+  .glass-effect {
+    @apply backdrop-blur-sm bg-white/30 dark:bg-black/30;
+  }
+  
+  .text-balance {
+    text-wrap: balance;
   }
 }
