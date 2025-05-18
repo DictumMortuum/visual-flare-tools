@@ -1,7 +1,7 @@
 
 import { 
   Dices, 
-  Chess, // Replacing ChessKnight with Chess
+  CircleUser, // Replacing Chess with CircleUser as a fallback
   Calculator, 
   Timer, 
   Users, 
@@ -66,7 +66,7 @@ export const toolsList = [
     title: "Chess Timer",
     description: "Two-player chess clock with multiple time control options",
     category: "Specific Games",
-    icon: <Chess className="h-5 w-5" />, // Changed from ChessKnight to Chess
+    icon: <CircleUser className="h-5 w-5" />, // Changed from Chess to CircleUser
   },
   {
     id: "token-tracker",
