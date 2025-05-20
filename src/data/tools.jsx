@@ -1,4 +1,3 @@
-
 import { 
   Dices, 
   CircleUser, // Replacing Chess with CircleUser as a fallback
@@ -15,7 +14,8 @@ import {
   Dice6,
   Circle,
   SquareStack,
-  Star
+  Star,
+  Table
 } from "lucide-react";
 
 export const toolsList = [
@@ -32,6 +32,13 @@ export const toolsList = [
     description: "Keep track of player turns and round markers",
     category: "Game Tools",
     icon: <Clock className="h-5 w-5" />,
+  },
+  {
+    id: "game-tables",
+    title: "Game Tables",
+    description: "Create and join board game sessions with friends",
+    category: "Players",
+    icon: <Table className="h-5 w-5" />,
   },
   {
     id: "score-calculator",

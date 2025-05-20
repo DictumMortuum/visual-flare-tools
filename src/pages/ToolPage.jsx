@@ -9,6 +9,7 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 // Tool components
 import DiceRoller from "@/components/tools/boardgame/DiceRoller";
 import TurnTracker from "@/components/tools/boardgame/TurnTracker";
+import GameTables from "@/components/tools/boardgame/GameTables";
 
 const ToolPage = () => {
   const { id } = useParams();
@@ -66,6 +67,8 @@ const ToolPage = () => {
         return <DiceRoller />;
       case 'turn-tracker':
         return <TurnTracker />;
+      case 'game-tables':
+        return <GameTables />;
       default:
         return (
           <div className="text-center py-16">
