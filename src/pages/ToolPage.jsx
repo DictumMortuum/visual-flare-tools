@@ -1,20 +1,23 @@
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from "react-router-dom";
-import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { toolsList } from "@/data/tools";
 import { ArrowLeft, Loader2 } from "lucide-react";
-
+import { UserContext } from '../context';
 // Tool components
 import DiceRoller from "@/components/tools/boardgame/DiceRoller";
 import TurnTracker from "@/components/tools/boardgame/TurnTracker";
 import GameTables from "@/components/tools/boardgame/GameTables";
-import Wishlist from "@/components/tools/boardgame/Wishlist";
+import Wishlist from "@/components/tools/general/Wishlist";
+import { useNavigate } from 'react-router-dom';
 
 const ToolPage = () => {
   const { id } = useParams();
+  const { state: { user } } = React.useContext(UserContext);
   const [loading, setLoading] = useState(true);
   const tool = toolsList.find(t => t.id === id);
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Simulate loading
@@ -53,6 +56,12 @@ const ToolPage = () => {
   }
 
   const renderToolComponent = () => {
+    useEffect(() => {
+      if (user === null) {
+        navigate("/login");
+      }
+    }, [user, navigate]);
+
     if (loading) {
       return (
         <div className="flex justify-center items-center py-20">
@@ -70,7 +79,7 @@ const ToolPage = () => {
       case 'game-tables':
         return <GameTables />;
       case 'wishlist':
-        return <Wishlist />;
+        return <Wishlist email={user.email} />;
       default:
         return (
           <div className="text-center py-16">
@@ -85,9 +94,9 @@ const ToolPage = () => {
   };
 
   return (
-    <div className="container py-10">
-      <div className="mx-auto max-w-3xl space-y-6">
-        <div className="flex items-center space-x-4">
+    <div className="container pl-0 pr-0">
+      <div className="mx-auto max-w-6xl space-y-6">
+        <div className="flex items-center">
           <Button asChild variant="ghost" size="sm">
             <Link to="/">
               <ArrowLeft className="mr-2 h-4 w-4" />

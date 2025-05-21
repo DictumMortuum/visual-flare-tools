@@ -1,24 +1,24 @@
 
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth0 } from "@auth0/auth0-react";
+import React, { useState } from 'react';
+// import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { 
+import {
   Mail,
-  Github, 
+  Github,
   Facebook,
-  EyeIcon, 
+  EyeIcon,
   EyeOffIcon
 } from 'lucide-react';
-
+import { UserContext } from '../../context';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { useNavigate } from 'react-router-dom';
+// import { Separator } from '@/components/ui/separator';
 
 const Login = () => {
+  const { dispatch } = React.useContext(UserContext);
   const navigate = useNavigate();
-  const { loginWithRedirect, loginWithPopup, isLoading: auth0Loading } = useAuth0();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -27,20 +27,14 @@ const Login = () => {
   const handleEmailLogin = (e) => {
     e.preventDefault();
     setIsLoading(true);
-    
-    // Redirect to Auth0 universal login with email pre-filled
-    loginWithRedirect({
-      authorizationParams: {
-        login_hint: email
-      }
-    });
-  };
 
-  const handleSocialLogin = (provider) => {
-    // Use Auth0 loginWithPopup for social logins
-    loginWithPopup({
-      connection: provider
-    });
+    dispatch({ type: "user::set", user: {
+      email: email,
+      user_id: email,
+    }});
+
+    setIsLoading(false);
+    navigate("/");
   };
 
   return (
@@ -74,7 +68,7 @@ const Login = () => {
                 <label className="text-sm font-medium leading-none" htmlFor="password">
                   Password
                 </label>
-                <button 
+                <button
                   type="button"
                   className="text-sm text-primary hover:underline"
                   onClick={() => loginWithRedirect({
@@ -109,12 +103,12 @@ const Login = () => {
               </div>
             </div>
 
-            <Button type="submit" className="w-full" disabled={isLoading || auth0Loading}>
-              {(isLoading || auth0Loading) ? 'Signing in...' : 'Sign in with Email'}
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {(isLoading) ? 'Signing in...' : 'Sign in with Email'}
             </Button>
           </form>
 
-          <div className="relative">
+          {/* <div className="relative">
             <div className="absolute inset-0 flex items-center">
               <Separator className="w-full" />
             </div>
@@ -123,33 +117,33 @@ const Login = () => {
                 or continue with
               </span>
             </div>
-          </div>
+          </div> */}
 
-          <div className="grid grid-cols-2 gap-4">
-            <Button 
-              variant="outline" 
-              onClick={() => handleSocialLogin('facebook')} 
-              disabled={isLoading || auth0Loading}
+          {/* <div className="grid grid-cols-2 gap-4">
+            <Button
+              variant="outline"
+              onClick={() => handleSocialLogin('facebook')}
+              disabled={isLoading}
               className="transition-all hover:bg-blue-500 hover:text-white"
             >
               <Facebook className="mr-2 h-4 w-4" />
               Facebook
             </Button>
-            <Button 
-              variant="outline" 
-              onClick={() => handleSocialLogin('github')} 
-              disabled={isLoading || auth0Loading}
+            <Button
+              variant="outline"
+              onClick={() => handleSocialLogin('github')}
+              disabled={isLoading}
               className="transition-all hover:bg-black hover:text-white"
             >
               <Github className="mr-2 h-4 w-4" />
               GitHub
             </Button>
-          </div>
+          </div> */}
         </CardContent>
-        <CardFooter className="flex justify-center border-t pt-6">
+        {/* <CardFooter className="flex justify-center border-t pt-6">
           <p className="text-sm text-muted-foreground">
             Don&apos;t have an account?{' '}
-            <button 
+            <button
               className="text-primary font-medium hover:underline"
               onClick={() => loginWithRedirect({
                 authorizationParams: {
@@ -160,7 +154,7 @@ const Login = () => {
               Sign up
             </button>
           </p>
-        </CardFooter>
+        </CardFooter> */}
       </Card>
     </div>
   );

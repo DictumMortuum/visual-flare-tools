@@ -1,12 +1,13 @@
 
 import { Link } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { LogOut, LogIn } from "lucide-react";
 import ThemeToggle from "@/components/ui/theme-toggle";
 
-const Header = () => {
-  const { user, logout } = useAuth();
+const Header = ({ email, dispatch }) => {
+  const logout = () => {
+    dispatch({ type: "user::unset" });
+  }
 
   return (
     <header className="border-b bg-background">
@@ -32,9 +33,9 @@ const Header = () => {
         </div>
         <div className="flex items-center gap-4">
           <ThemeToggle />
-          {user ? (
+          {email ? (
             <div className="flex items-center gap-4">
-              <span className="text-sm">Welcome, {user.name}</span>
+              <span className="text-sm">Welcome, {email}</span>
               <Button
                 variant="outline"
                 size="sm"
