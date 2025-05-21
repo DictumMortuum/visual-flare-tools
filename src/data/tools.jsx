@@ -15,7 +15,8 @@ import {
   Circle,
   SquareStack,
   Star,
-  Table
+  Table,
+  Bookmark
 } from "lucide-react";
 
 export const toolsList = [
@@ -39,6 +40,13 @@ export const toolsList = [
     description: "Create and join board game sessions with friends",
     category: "Players",
     icon: <Table className="h-5 w-5" />,
+  },
+  {
+    id: "game-wishlist",
+    title: "Game Wishlist",
+    description: "Create a wishlist of board games and let others reserve them for you",
+    category: "Players",
+    icon: <Bookmark className="h-5 w-5" />,
   },
   {
     id: "score-calculator",

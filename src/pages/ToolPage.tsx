@@ -6,6 +6,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { toolsList } from "@/data/tools";
 import { ArrowLeft, Loader2 } from "lucide-react";
 
+// Import the tool components
+// Note: These would need TypeScript versions if using TypeScript fully
+import DiceRoller from "@/components/tools/boardgame/DiceRoller";
+import TurnTracker from "@/components/tools/boardgame/TurnTracker";
+import GameTables from "@/components/tools/boardgame/GameTables";
+import Wishlist from "@/components/tools/boardgame/Wishlist";
+
 const ToolPage = () => {
   const { id } = useParams<{ id: string }>();
   const [loading, setLoading] = useState(true);
@@ -76,14 +83,22 @@ const ToolPage = () => {
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
               </div>
             ) : (
-              <div className="text-center py-16">
-                <div className="text-2xl mb-2">{tool.icon}</div>
-                <h2 className="text-xl font-medium mb-2">Tool Interface Coming Soon</h2>
-                <p className="text-muted-foreground max-w-md mx-auto">
-                  This is a placeholder for the {tool.title.toLowerCase()} tool interface.
-                  The actual implementation would go here.
-                </p>
-              </div>
+              <>
+                {id === 'dice-roller' && <DiceRoller />}
+                {id === 'turn-tracker' && <TurnTracker />}
+                {id === 'game-tables' && <GameTables />}
+                {id === 'game-wishlist' && <Wishlist />}
+                {!['dice-roller', 'turn-tracker', 'game-tables', 'game-wishlist'].includes(id || '') && (
+                  <div className="text-center py-16">
+                    <div className="text-2xl mb-2">{tool.icon}</div>
+                    <h2 className="text-xl font-medium mb-2">Tool Interface Coming Soon</h2>
+                    <p className="text-muted-foreground max-w-md mx-auto">
+                      This is a placeholder for the {tool.title.toLowerCase()} tool interface.
+                      The actual implementation would go here.
+                    </p>
+                  </div>
+                )}
+              </>
             )}
           </CardContent>
         </Card>

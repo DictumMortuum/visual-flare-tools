@@ -1,4 +1,3 @@
-
 import { useParams, Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -10,6 +9,7 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 import DiceRoller from "@/components/tools/boardgame/DiceRoller";
 import TurnTracker from "@/components/tools/boardgame/TurnTracker";
 import GameTables from "@/components/tools/boardgame/GameTables";
+import Wishlist from "@/components/tools/boardgame/Wishlist";
 
 const ToolPage = () => {
   const { id } = useParams();
@@ -69,6 +69,8 @@ const ToolPage = () => {
         return <TurnTracker />;
       case 'game-tables':
         return <GameTables />;
+      case 'game-wishlist':
+        return <Wishlist />;
       default:
         return (
           <div className="text-center py-16">
