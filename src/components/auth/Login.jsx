@@ -12,7 +12,7 @@ import {
   Alert,
   Stack
 } from '@mui/material';
-import { Eye, EyeOff, Facebook, Google } from 'lucide-react';
+import { Eye, EyeOff, Mail, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -142,7 +142,7 @@ const Login = () => {
           <Button
             fullWidth
             variant="outlined"
-            startIcon={<Google size={20} />}
+            startIcon={<Mail size={20} />}
             onClick={() => handleSocialLogin('google')}
             disabled={isLoading}
           >
@@ -152,7 +152,7 @@ const Login = () => {
           <Button
             fullWidth
             variant="outlined"
-            startIcon={<Facebook size={20} />}
+            startIcon={<ArrowRight size={20} />}
             onClick={() => handleSocialLogin('facebook')}
             disabled={isLoading}
             sx={{ 
