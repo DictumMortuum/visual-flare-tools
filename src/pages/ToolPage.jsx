@@ -1,16 +1,9 @@
-
 import { useParams, Link } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { 
-  Container, 
-  Box, 
-  Typography, 
-  Button, 
-  Paper, 
-  CircularProgress 
-} from "@mui/material";
-import { ArrowBack } from "@mui/icons-material";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { toolsList } from "@/data/tools";
+import { ArrowLeft, Loader2 } from "lucide-react";
 
 // Tool components
 import DiceRoller from "@/components/tools/boardgame/DiceRoller";
@@ -34,40 +27,37 @@ const ToolPage = () => {
 
   if (!tool) {
     return (
-      <Container maxWidth="md" sx={{ py: 5 }}>
-        <Box sx={{ mb: 3 }}>
-          <Button 
-            component={Link} 
-            to="/"
-            startIcon={<ArrowBack />}
-            variant="text"
-            color="inherit"
-          >
-            Back to Tools
-          </Button>
-        </Box>
-        
-        <Box sx={{ textAlign: 'center', py: 10 }}>
-          <Typography variant="h4" component="h1" gutterBottom fontWeight="bold">
-            Tool Not Found
-          </Typography>
-          <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-            Sorry, the tool you're looking for doesn't exist.
-          </Typography>
-          <Button component={Link} to="/" variant="contained">
-            Return to Tools
-          </Button>
-        </Box>
-      </Container>
+      <div className="container py-10">
+        <div className="mx-auto max-w-3xl space-y-6">
+          <div className="flex items-center space-x-4">
+            <Button asChild variant="ghost" size="sm">
+              <Link to="/">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Tools
+              </Link>
+            </Button>
+          </div>
+          
+          <div className="text-center py-16">
+            <h1 className="text-2xl font-bold mb-2">Tool Not Found</h1>
+            <p className="text-muted-foreground mb-6">
+              Sorry, the tool you're looking for doesn't exist.
+            </p>
+            <Button asChild>
+              <Link to="/">Return to Tools</Link>
+            </Button>
+          </div>
+        </div>
+      </div>
     );
   }
 
   const renderToolComponent = () => {
     if (loading) {
       return (
-        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', py: 10 }}>
-          <CircularProgress />
-        </Box>
+        <div className="flex justify-center items-center py-20">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
       );
     }
     
@@ -83,59 +73,46 @@ const ToolPage = () => {
         return <Wishlist />;
       default:
         return (
-          <Box sx={{ textAlign: 'center', py: 10 }}>
-            <Box sx={{ fontSize: '2rem', mb: 2 }}>{tool.icon}</Box>
-            <Typography variant="h5" component="h2" gutterBottom>
-              Tool Interface Coming Soon
-            </Typography>
-            <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 500, mx: 'auto' }}>
+          <div className="text-center py-16">
+            <div className="text-2xl mb-2">{tool.icon}</div>
+            <h2 className="text-xl font-medium mb-2">Tool Interface Coming Soon</h2>
+            <p className="text-muted-foreground max-w-md mx-auto">
               The {tool.title.toLowerCase()} tool is under development.
-            </Typography>
-          </Box>
+            </p>
+          </div>
         );
     }
   };
 
   return (
-    <Container maxWidth="md" sx={{ py: 5 }}>
-      <Box sx={{ mb: 3 }}>
-        <Button 
-          component={Link} 
-          to="/"
-          startIcon={<ArrowBack />}
-          variant="text"
-          color="inherit"
-        >
-          Back to Tools
-        </Button>
-      </Box>
+    <div className="container py-10">
+      <div className="mx-auto max-w-3xl space-y-6">
+        <div className="flex items-center space-x-4">
+          <Button asChild variant="ghost" size="sm">
+            <Link to="/">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Tools
+            </Link>
+          </Button>
+        </div>
 
-      <Box sx={{ mb: 4 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Box sx={{ 
-            p: 1.5, 
-            borderRadius: 1, 
-            bgcolor: 'primary.light', 
-            color: 'primary.contrastText',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}>
-            {tool.icon}
-          </Box>
-          <Typography variant="h4" component="h1" fontWeight="bold">
-            {tool.title}
-          </Typography>
-        </Box>
-        <Typography variant="body1" color="text.secondary" sx={{ mt: 1 }}>
-          {tool.description}
-        </Typography>
-      </Box>
+        <div className="space-y-2">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-primary/10 rounded-md text-primary">
+              {tool.icon}
+            </div>
+            <h1 className="text-3xl font-bold">{tool.title}</h1>
+          </div>
+          <p className="text-muted-foreground">{tool.description}</p>
+        </div>
 
-      <Paper elevation={2} sx={{ p: 3, borderRadius: 2 }}>
-        {renderToolComponent()}
-      </Paper>
-    </Container>
+        <Card>
+          <CardContent className="pt-6">
+            {renderToolComponent()}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   );
 };
 
