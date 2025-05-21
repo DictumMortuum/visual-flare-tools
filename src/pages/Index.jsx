@@ -6,10 +6,10 @@ const Index = () => {
     <div className="container py-8">
       <div className="mx-auto max-w-4xl text-center mb-12">
         <h1 className="text-4xl font-bold tracking-tight sm:text-5xl mb-4 bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70">
-          Boardgame Tools
+          Tools
         </h1>
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-          A collection of free, simple, and useful tools for boardgame enthusiasts and players.
+          A collection of free, simple, and useful tools.
         </p>
       </div>
 

@@ -37,7 +37,7 @@ const ToolPage = () => {
               </Link>
             </Button>
           </div>
-          
+
           <div className="text-center py-16">
             <h1 className="text-2xl font-bold mb-2">Tool Not Found</h1>
             <p className="text-muted-foreground mb-6">
@@ -60,7 +60,7 @@ const ToolPage = () => {
         </div>
       );
     }
-    
+
     // Return the appropriate tool component based on id
     switch (tool.id) {
       case 'dice-roller':
@@ -69,7 +69,7 @@ const ToolPage = () => {
         return <TurnTracker />;
       case 'game-tables':
         return <GameTables />;
-      case 'game-wishlist':
+      case 'wishlist':
         return <Wishlist />;
       default:
         return (

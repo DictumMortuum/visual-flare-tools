@@ -12,7 +12,7 @@ const Header = () => {
       <div className="container flex h-16 items-center justify-between py-4">
         <div className="flex items-center gap-6">
           <Link to="/" className="text-2xl font-bold">
-            Boardgame Tools
+            Tools
           </Link>
           <nav className="hidden md:flex items-center gap-6 text-sm">
             <Link
