@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { LogOut, LogIn } from "lucide-react";
+import ThemeToggle from "@/components/ui/theme-toggle";
 
 const Header = () => {
   const { user, logout } = useAuth();
@@ -30,6 +31,7 @@ const Header = () => {
           </nav>
         </div>
         <div className="flex items-center gap-4">
+          <ThemeToggle />
           {user ? (
             <div className="flex items-center gap-4">
               <span className="text-sm">Welcome, {user.name}</span>

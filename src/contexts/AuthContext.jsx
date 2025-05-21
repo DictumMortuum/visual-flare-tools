@@ -1,40 +1,52 @@
 
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useEffect } from 'react';
+import { useAuth0 } from '@auth0/auth0-react';
+import { toast } from 'sonner';
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const { 
+    user: auth0User, 
+    isAuthenticated, 
+    isLoading, 
+    logout: auth0Logout,
+    loginWithRedirect
+  } = useAuth0();
 
+  // Transform Auth0 user to our user format
+  const user = isAuthenticated ? {
+    email: auth0User.email,
+    name: auth0User.name || auth0User.nickname || auth0User.email.split('@')[0],
+    picture: auth0User.picture,
+    isLoggedIn: true
+  } : null;
+
+  // Handle successful authentication
   useEffect(() => {
-    // Check if user is logged in from localStorage on initial load
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch (error) {
-        console.error("Failed to parse stored user data:", error);
-        localStorage.removeItem('user');
-      }
+    if (isAuthenticated && auth0User) {
+      toast.success(`Welcome, ${user.name}!`);
     }
-    setLoading(false);
-  }, []);
+  }, [isAuthenticated, auth0User]);
 
-  // Login function
-  const login = (userData) => {
-    localStorage.setItem('user', JSON.stringify(userData));
-    setUser(userData);
+  // Custom logout function
+  const logout = () => {
+    auth0Logout({ logoutParams: { returnTo: window.location.origin } });
+    toast.info('You have been logged out');
   };
 
-  // Logout function
-  const logout = () => {
-    localStorage.removeItem('user');
-    setUser(null);
+  // Login function
+  const login = () => {
+    loginWithRedirect();
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      login, 
+      logout, 
+      loading: isLoading
+    }}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,12 +1,12 @@
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth0 } from "@auth0/auth0-react";
 import { toast } from 'sonner';
 import { 
-  Facebook, 
-  Github, 
   Mail,
+  Github, 
+  Facebook,
   EyeIcon, 
   EyeOffIcon
 } from 'lucide-react';
@@ -18,7 +18,7 @@ import { Separator } from '@/components/ui/separator';
 
 const Login = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { loginWithRedirect, loginWithPopup, isLoading: auth0Loading } = useAuth0();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -28,49 +28,29 @@ const Login = () => {
     e.preventDefault();
     setIsLoading(true);
     
-    // Simulate login - in a real app, this would authenticate with a backend
-    setTimeout(() => {
-      if (email && password) {
-        // Store user info
-        login({
-          email,
-          name: email.split('@')[0],
-          isLoggedIn: true
-        });
-        toast.success('Login successful!');
-        navigate('/');
-      } else {
-        toast.error('Please enter both email and password');
+    // Redirect to Auth0 universal login with email pre-filled
+    loginWithRedirect({
+      authorizationParams: {
+        login_hint: email
       }
-      setIsLoading(false);
-    }, 1000);
+    });
   };
 
   const handleSocialLogin = (provider) => {
-    setIsLoading(true);
-    
-    // Simulate social login - in a real app, this would redirect to OAuth provider
-    setTimeout(() => {
-      login({
-        email: `user@${provider}.com`,
-        name: `${provider.charAt(0).toUpperCase() + provider.slice(1)}User`,
-        provider,
-        isLoggedIn: true
-      });
-      toast.success(`Logged in with ${provider}`);
-      setIsLoading(false);
-      navigate('/');
-    }, 1000);
+    // Use Auth0 loginWithPopup for social logins
+    loginWithPopup({
+      connection: provider
+    });
   };
 
   return (
     <div className="flex justify-center items-center min-h-[80vh]">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Welcome back</CardTitle>
-          <CardDescription>Sign in to your account</CardDescription>
+      <Card className="w-full max-w-md shadow-lg border-0 bg-card">
+        <CardHeader className="text-center space-y-1">
+          <CardTitle className="text-3xl font-bold">Welcome back</CardTitle>
+          <CardDescription className="text-base">Sign in to your account</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-6">
           <form onSubmit={handleEmailLogin} className="space-y-4">
             <div className="space-y-2">
               <label className="text-sm font-medium leading-none" htmlFor="email">
@@ -97,7 +77,11 @@ const Login = () => {
                 <button 
                   type="button"
                   className="text-sm text-primary hover:underline"
-                  onClick={() => toast.info('Reset password functionality would go here')}
+                  onClick={() => loginWithRedirect({
+                    authorizationParams: {
+                      screen_hint: "forgot_password",
+                    },
+                  })}
                 >
                   Forgot password?
                 </button>
@@ -125,12 +109,12 @@ const Login = () => {
               </div>
             </div>
 
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Signing in...' : 'Sign in with Email'}
+            <Button type="submit" className="w-full" disabled={isLoading || auth0Loading}>
+              {(isLoading || auth0Loading) ? 'Signing in...' : 'Sign in with Email'}
             </Button>
           </form>
 
-          <div className="relative my-4">
+          <div className="relative">
             <div className="absolute inset-0 flex items-center">
               <Separator className="w-full" />
             </div>
@@ -145,7 +129,8 @@ const Login = () => {
             <Button 
               variant="outline" 
               onClick={() => handleSocialLogin('facebook')} 
-              disabled={isLoading}
+              disabled={isLoading || auth0Loading}
+              className="transition-all hover:bg-blue-500 hover:text-white"
             >
               <Facebook className="mr-2 h-4 w-4" />
               Facebook
@@ -153,19 +138,24 @@ const Login = () => {
             <Button 
               variant="outline" 
               onClick={() => handleSocialLogin('github')} 
-              disabled={isLoading}
+              disabled={isLoading || auth0Loading}
+              className="transition-all hover:bg-black hover:text-white"
             >
               <Github className="mr-2 h-4 w-4" />
               GitHub
             </Button>
           </div>
         </CardContent>
-        <CardFooter className="flex justify-center">
+        <CardFooter className="flex justify-center border-t pt-6">
           <p className="text-sm text-muted-foreground">
             Don&apos;t have an account?{' '}
             <button 
-              className="text-primary hover:underline"
-              onClick={() => toast.info('Registration functionality would go here')}
+              className="text-primary font-medium hover:underline"
+              onClick={() => loginWithRedirect({
+                authorizationParams: {
+                  screen_hint: "signup",
+                },
+              })}
             >
               Sign up
             </button>
