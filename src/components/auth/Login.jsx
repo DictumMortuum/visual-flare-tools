@@ -12,11 +12,13 @@ import {
   Alert,
   Stack
 } from '@mui/material';
-import { Google, Facebook, Visibility, VisibilityOff } from '@mui/icons-material';
+import { Eye, EyeOff, Facebook, Google } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 
 const Login = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -32,11 +34,12 @@ const Login = () => {
     setTimeout(() => {
       if (email && password) {
         // Store user info in localStorage (in a real app, you'd use proper auth tokens)
-        localStorage.setItem('user', JSON.stringify({
+        const userData = {
           email,
           name: email.split('@')[0],
           isLoggedIn: true
-        }));
+        };
+        login(userData);
         navigate('/');
       } else {
         setError('Please enter both email and password');
@@ -51,12 +54,13 @@ const Login = () => {
     
     // Simulate social login - in a real app, this would redirect to OAuth provider
     setTimeout(() => {
-      localStorage.setItem('user', JSON.stringify({
+      const userData = {
         email: `user@${provider}.com`,
         name: `${provider}User`,
         provider,
         isLoggedIn: true
-      }));
+      };
+      login(userData);
       setIsLoading(false);
       navigate('/');
     }, 1000);
@@ -112,7 +116,7 @@ const Login = () => {
                     onClick={() => setShowPassword(!showPassword)}
                     edge="end"
                   >
-                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </IconButton>
                 </InputAdornment>
               )
@@ -138,7 +142,7 @@ const Login = () => {
           <Button
             fullWidth
             variant="outlined"
-            startIcon={<Google />}
+            startIcon={<Google size={20} />}
             onClick={() => handleSocialLogin('google')}
             disabled={isLoading}
           >
@@ -148,7 +152,7 @@ const Login = () => {
           <Button
             fullWidth
             variant="outlined"
-            startIcon={<Facebook />}
+            startIcon={<Facebook size={20} />}
             onClick={() => handleSocialLogin('facebook')}
             disabled={isLoading}
             sx={{ 
