@@ -8,7 +8,7 @@ const Footer = () => {
         <p className="text-sm text-muted-foreground md:text-base">
           &copy; {new Date().getFullYear()} Boardgame Tools. All rights reserved.
         </p>
-        
+
         <div className="flex gap-8 md:items-center text-sm text-muted-foreground">
           <Link to="/about" className="hover:text-primary transition-colors">
             About

@@ -13,10 +13,10 @@ const ToolGrid = ({ tools = toolsList }) => {
   const categories = Array.from(new Set(toolsList.map(tool => tool.category)));
 
   const filteredTools = tools.filter(tool => {
-    const matchesSearch = tool.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    const matchesSearch = tool.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                         tool.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory ? tool.category === selectedCategory : true;
-    
+
     return matchesSearch && matchesCategory;
   });
 
@@ -48,12 +48,12 @@ const ToolGrid = ({ tools = toolsList }) => {
               key={category}
               size="sm"
               variant={selectedCategory === category ? "default" : "outline"}
-              onClick={() => 
+              onClick={() =>
                 setSelectedCategory(selectedCategory === category ? null : category)
               }
               className={`flex gap-1 items-center rounded-full text-xs px-4 ${
-                selectedCategory === category 
-                  ? "bg-primary hover:bg-primary/90" 
+                selectedCategory === category
+                  ? "bg-primary hover:bg-primary/90"
                   : "border-muted-foreground/20 hover:border-muted-foreground/40 hover:bg-muted-foreground/5"
               }`}
             >
