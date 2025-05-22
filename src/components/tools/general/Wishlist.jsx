@@ -1,8 +1,9 @@
+
 import React, { useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Bookmark, BookmarkPlus, Link, RefreshCw } from "lucide-react";
+import { Bookmark, BookmarkPlus, Link, RefreshCw, Copy, CheckSquare } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { toast } from 'sonner';
@@ -10,6 +11,7 @@ import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { useParams } from 'react-router-dom';
 import { UserContext } from '../../../context';
 import { useNavigate } from 'react-router-dom';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const WishlistRouter = () => {
   const { email } = useParams();
@@ -47,12 +49,46 @@ const Container = ({ email }) => {
 const Wishlist = ({ data, email }) => {
   const { state: { user } } = React.useContext(UserContext);
   const isEditor = user.email === email;
+  const [copied, setCopied] = React.useState(false);
+  
+  const copyUrlToClipboard = () => {
+    const wishlistUrl = `${window.location.origin}/#/wishlist/${email}`;
+    navigator.clipboard.writeText(wishlistUrl).then(() => {
+      setCopied(true);
+      toast.success('Wishlist URL copied to clipboard!');
+      
+      // Reset the copied state after 2 seconds
+      setTimeout(() => setCopied(false), 2000);
+    }).catch(err => {
+      toast.error('Failed to copy URL');
+      console.error('Could not copy text: ', err);
+    });
+  };
 
   return (
     <div className="space-y-6">
       {isEditor && <AddForm email={email} user_id={email} />}
       <div>
-        <h2 className="text-xl font-medium mb-4">{email}'s wishlist</h2>
+        <div className="flex items-center gap-2 mb-4">
+          <h2 className="text-xl font-medium">{email}'s wishlist</h2>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-8 w-8" 
+                  onClick={copyUrlToClipboard}
+                >
+                  {copied ? <CheckSquare className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Copy wishlist URL</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
         {data.length === 0 ? (
           <Card>
             <CardContent className="p-6 text-center text-muted-foreground">
