@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -8,7 +9,7 @@ import { UserContext } from '../context';
 // Tool components
 import DiceRoller from "@/components/tools/boardgame/DiceRoller";
 import TurnTracker from "@/components/tools/boardgame/TurnTracker";
-import GameTables from "@/components/tools/boardgame/GameTables";
+import BoardGameTables from "@/components/tools/boardgame/BoardGameTables";
 import Wishlist from "@/components/tools/general/Wishlist";
 import { useNavigate } from 'react-router-dom';
 
@@ -77,7 +78,7 @@ const ToolPage = () => {
       case 'turn-tracker':
         return <TurnTracker />;
       case 'game-tables':
-        return <GameTables />;
+        return <BoardGameTables />;
       case 'wishlist':
         return <Wishlist email={user.email} />;
       default:
