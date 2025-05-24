@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -37,18 +36,18 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
-// Mock data for BoardGameGeek API results
+// Mock data for BoardGameGeek API results with placeholder images
 const mockBoardGames = [
-  { id: 13, name: "Catan", year: 1995, rating: 7.2, minPlayers: 3, maxPlayers: 4, playTime: 90 },
-  { id: 9209, name: "Ticket to Ride", year: 2004, rating: 7.4, minPlayers: 2, maxPlayers: 5, playTime: 60 },
-  { id: 30549, name: "Pandemic", year: 2008, rating: 7.6, minPlayers: 2, maxPlayers: 4, playTime: 45 },
-  { id: 68448, name: "7 Wonders", year: 2010, rating: 7.7, minPlayers: 2, maxPlayers: 7, playTime: 30 },
-  { id: 230802, name: "Azul", year: 2017, rating: 7.8, minPlayers: 2, maxPlayers: 4, playTime: 45 },
-  { id: 266192, name: "Wingspan", year: 2019, rating: 8.1, minPlayers: 1, maxPlayers: 5, playTime: 90 },
-  { id: 174430, name: "Gloomhaven", year: 2017, rating: 8.7, minPlayers: 1, maxPlayers: 4, playTime: 120 },
-  { id: 167791, name: "Terraforming Mars", year: 2016, rating: 8.4, minPlayers: 1, maxPlayers: 5, playTime: 120 },
-  { id: 169786, name: "Scythe", year: 2016, rating: 8.2, minPlayers: 1, maxPlayers: 5, playTime: 115 },
-  { id: 224517, name: "Brass: Birmingham", year: 2018, rating: 8.6, minPlayers: 2, maxPlayers: 4, playTime: 120 },
+  { id: 13, name: "Catan", year: 1995, rating: 7.2, minPlayers: 3, maxPlayers: 4, playTime: 90, image: "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=200&h=200&fit=crop" },
+  { id: 9209, name: "Ticket to Ride", year: 2004, rating: 7.4, minPlayers: 2, maxPlayers: 5, playTime: 60, image: "https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=200&h=200&fit=crop" },
+  { id: 30549, name: "Pandemic", year: 2008, rating: 7.6, minPlayers: 2, maxPlayers: 4, playTime: 45, image: "https://images.unsplash.com/photo-1493962853295-0fd70327578a?w=200&h=200&fit=crop" },
+  { id: 68448, name: "7 Wonders", year: 2010, rating: 7.7, minPlayers: 2, maxPlayers: 7, playTime: 30, image: "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=200&h=200&fit=crop" },
+  { id: 230802, name: "Azul", year: 2017, rating: 7.8, minPlayers: 2, maxPlayers: 4, playTime: 45, image: "https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=200&h=200&fit=crop" },
+  { id: 266192, name: "Wingspan", year: 2019, rating: 8.1, minPlayers: 1, maxPlayers: 5, playTime: 90, image: "https://images.unsplash.com/photo-1493962853295-0fd70327578a?w=200&h=200&fit=crop" },
+  { id: 174430, name: "Gloomhaven", year: 2017, rating: 8.7, minPlayers: 1, maxPlayers: 4, playTime: 120, image: "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=200&h=200&fit=crop" },
+  { id: 167791, name: "Terraforming Mars", year: 2016, rating: 8.4, minPlayers: 1, maxPlayers: 5, playTime: 120, image: "https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=200&h=200&fit=crop" },
+  { id: 169786, name: "Scythe", year: 2016, rating: 8.2, minPlayers: 1, maxPlayers: 5, playTime: 115, image: "https://images.unsplash.com/photo-1493962853295-0fd70327578a?w=200&h=200&fit=crop" },
+  { id: 224517, name: "Brass: Birmingham", year: 2018, rating: 8.6, minPlayers: 2, maxPlayers: 4, playTime: 120, image: "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=200&h=200&fit=crop" },
 ];
 
 // Mock data for tables
@@ -58,6 +57,7 @@ const initialTables = [
     gameId: 13,
     gameName: "Catan",
     gameYear: 1995,
+    gameImage: "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=200&h=200&fit=crop",
     dateTime: new Date(2025, 5, 26, 18, 0),
     creator: "Alice Johnson",
     maxPlayers: 4,
@@ -72,6 +72,7 @@ const initialTables = [
     gameId: 174430,
     gameName: "Gloomhaven",
     gameYear: 2017,
+    gameImage: "https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=200&h=200&fit=crop",
     dateTime: new Date(2025, 5, 27, 14, 0),
     creator: "Charlie Brown",
     maxPlayers: 4,
@@ -133,6 +134,7 @@ const BoardGameTables = () => {
       gameId: parseInt(data.gameId),
       gameName: data.gameName,
       gameYear: selectedGame?.year || 2024,
+      gameImage: selectedGame?.image || "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=200&h=200&fit=crop",
       dateTime: data.dateTime,
       creator: playerName || "Anonymous",
       maxPlayers: data.maxPlayers,
@@ -317,16 +319,23 @@ const BoardGameTables = () => {
                             {gameResults.map(game => (
                               <div
                                 key={game.id}
-                                className="p-3 hover:bg-muted cursor-pointer border-b last:border-0"
+                                className="p-3 hover:bg-muted cursor-pointer border-b last:border-0 flex items-center gap-3"
                                 onClick={() => selectGame(game)}
                               >
-                                <div className="font-medium">{game.name}</div>
-                                <div className="text-xs text-muted-foreground flex gap-4 mt-1">
-                                  <span>BGG ID: {game.id}</span>
-                                  <span>{game.year}</span>
-                                  <span>{game.minPlayers}-{game.maxPlayers} players</span>
-                                  <span>{game.playTime} min</span>
-                                  <span>★ {game.rating}</span>
+                                <img 
+                                  src={game.image} 
+                                  alt={game.name}
+                                  className="w-12 h-12 rounded-md object-cover"
+                                />
+                                <div className="flex-1">
+                                  <div className="font-medium">{game.name}</div>
+                                  <div className="text-xs text-muted-foreground flex gap-4 mt-1">
+                                    <span>BGG ID: {game.id}</span>
+                                    <span>{game.year}</span>
+                                    <span>{game.minPlayers}-{game.maxPlayers} players</span>
+                                    <span>{game.playTime} min</span>
+                                    <span>★ {game.rating}</span>
+                                  </div>
                                 </div>
                               </div>
                             ))}
@@ -478,15 +487,22 @@ const BoardGameTables = () => {
             <Card key={table.id} className="overflow-hidden border-l-4 border-l-blue-500 hover:shadow-lg transition-shadow">
               <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20">
                 <div className="flex justify-between items-start">
-                  <div>
-                    <CardTitle className="text-xl font-bold text-blue-900 dark:text-blue-100">
-                      {table.gameName}
-                    </CardTitle>
-                    <CardDescription className="flex items-center gap-2 mt-1">
-                      <span>BGG ID: {table.gameId}</span>
-                      <span>•</span>
-                      <span>{table.gameYear}</span>
-                    </CardDescription>
+                  <div className="flex items-center gap-4">
+                    <img 
+                      src={table.gameImage} 
+                      alt={table.gameName}
+                      className="w-16 h-16 rounded-lg object-cover shadow-md"
+                    />
+                    <div>
+                      <CardTitle className="text-xl font-bold text-blue-900 dark:text-blue-100">
+                        {table.gameName}
+                      </CardTitle>
+                      <CardDescription className="flex items-center gap-2 mt-1">
+                        <span>BGG ID: {table.gameId}</span>
+                        <span>•</span>
+                        <span>{table.gameYear}</span>
+                      </CardDescription>
+                    </div>
                   </div>
                   <div className="flex gap-2">
                     <Button
