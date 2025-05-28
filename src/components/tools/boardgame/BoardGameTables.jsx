@@ -365,9 +365,11 @@ const Table = ({ table, email }) => {
         </div>
       </CardContent>
 
-      <CardFooter className="bg-gray-50 dark:bg-gray-800/50 flex justify-center items-center p-4 mt-auto">
-        <div className="flex gap-2">
+      <CardFooter className="bg-gray-50 dark:bg-gray-800/50 flex justify-between items-center p-4 mt-auto">
+        <div className="flex items-center">
           {table.creator === email && <DeleteButton id={table.id} />}
+        </div>
+        <div className="flex items-center">
           {participants.includes(email) ? (
             <LeaveButton id={participant[0].id} />
           ) : (
