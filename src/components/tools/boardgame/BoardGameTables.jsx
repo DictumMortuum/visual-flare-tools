@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
 import {v4 as uuidv4} from 'uuid';
-import { Plus, Calendar, Users, MapPin, Play, UserMinus, Copy, ExternalLink } from "lucide-react";
+import { Plus, Calendar, Users, MapPin, Play, UserMinus, Copy, ExternalLink, Clock, Crown, Gamepad2 } from "lucide-react";
 import { format, isAfter } from "date-fns";
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -39,7 +40,11 @@ const TableRouter = () => {
   });
 
   if (isLoading) {
-    return <>Loading...</>;
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
   }
 
   console.log(data);
@@ -68,7 +73,11 @@ const Container = ({ email }) => {
   });
 
   if (isLoading) {
-    return <>Loading...</>;
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
   }
 
   return <BoardGameTables data={data} email={email} />;
@@ -85,33 +94,57 @@ const BoardGameTables = ({ data, email }) => {
   );
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 max-w-7xl mx-auto">
+      {/* Header Section */}
+      <div className="text-center space-y-4">
+        <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full text-primary text-sm font-medium">
+          <Gamepad2 className="h-4 w-4" />
+          Board Game Tables
+        </div>
+        <h1 className="text-4xl font-bold tracking-tight">Find Your Next Game Night</h1>
+        <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+          Join existing tables or create your own to gather fellow board game enthusiasts
+        </p>
+      </div>
+
+      {/* Create Table CTA */}
       <div className="flex justify-center">
         <BoardGameTablesDialog email={email} showCreateForm={showCreateForm} setShowCreateForm={setShowCreateForm} />
       </div>
 
       {/* Tables Grid */}
       {currentTables.length > 0 ? (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {currentTables.map((table) => (
-            <Table key={table.id} table={table} email={email} />
-          ))}
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-semibold text-foreground">Available Tables</h2>
+            <div className="text-sm text-muted-foreground">
+              {currentTables.length} {currentTables.length === 1 ? 'table' : 'tables'} available
+            </div>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+            {currentTables.map((table) => (
+              <Table key={table.id} table={table} email={email} />
+            ))}
+          </div>
         </div>
       ) : (
-        <Card className="text-center py-12 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20">
-          <CardContent>
-            <div className="mx-auto w-24 h-24 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mb-6">
-              {/* <Table className="h-12 w-12 text-blue-600 dark:text-blue-400" /> */}
+        <Card className="text-center py-16 border-dashed border-2 bg-gradient-to-br from-muted/20 to-muted/5">
+          <CardContent className="space-y-6">
+            <div className="mx-auto w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center">
+              <Gamepad2 className="h-12 w-12 text-primary" />
             </div>
-            <h3 className="text-xl font-semibold mb-2">No Game Tables Available</h3>
-            <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-              Be the first to create a board game table! Gather your friends and start playing.
-            </p>
+            <div className="space-y-2">
+              <h3 className="text-2xl font-semibold">No Game Tables Yet</h3>
+              <p className="text-muted-foreground max-w-md mx-auto text-lg">
+                Be the first to create a table and start building your gaming community!
+              </p>
+            </div>
             <Button
               onClick={() => setShowCreateForm(true)}
-              className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700"
+              size="lg"
+              className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg"
             >
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus className="mr-2 h-5 w-5" />
               Create Your First Table
             </Button>
           </CardContent>
@@ -159,7 +192,7 @@ const StartButton = ({ id }) => {
   return (
     <Button
       onClick={onClick}
-      className="bg-green-600 hover:bg-green-700"
+      className="bg-green-600 hover:bg-green-700 shadow-md"
       size="sm"
     >
       <Play className="h-4 w-4 mr-2" />
@@ -287,29 +320,40 @@ const JoinButton = ({ table, email }) => {
 const Table = ({ table, email }) => {
   const participants = table.participants.map(d => d.name);
   const participant = table.participants.filter(d => d.name === email);
+  const isHost = table.creator === email;
+  const isParticipant = participants.includes(email);
+  const isFull = table.participants.length >= table.seats;
 
   return (
-    <Card key={table.id} className="overflow-hidden border-l-4 border-l-blue-500 hover:shadow-lg transition-shadow flex flex-col">
-      <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20">
-        <div className="flex justify-between items-start">
-          <div className="flex items-center gap-4">
-            <img
-              src={table.boardgame.square200}
-              alt={table.boardgame.name}
-              className="w-16 h-16 rounded-lg object-cover shadow-md"
-            />
-            <div>
-              <CardTitle className="text-xl font-bold text-blue-900 dark:text-blue-100">
+    <Card className="group overflow-hidden border hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-card/50 backdrop-blur-sm">
+      {/* Game Header */}
+      <CardHeader className="relative bg-gradient-to-br from-primary/5 via-primary/3 to-transparent border-b">
+        <div className="flex justify-between items-start gap-4">
+          <div className="flex items-center gap-4 flex-1 min-w-0">
+            <div className="relative">
+              <img
+                src={table.boardgame.square200}
+                alt={table.boardgame.name}
+                className="w-16 h-16 rounded-xl object-cover shadow-lg ring-2 ring-white/20"
+              />
+              {isHost && (
+                <div className="absolute -top-2 -right-2 bg-yellow-500 rounded-full p-1">
+                  <Crown className="h-3 w-3 text-white" />
+                </div>
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <CardTitle className="text-xl font-bold text-foreground truncate">
                 {table.boardgame.name}
               </CardTitle>
-              <CardDescription className="flex items-center gap-2 mt-1">
-                <span>BGG ID: {table.boardgame_id}</span>
+              <CardDescription className="flex items-center gap-2 mt-1 text-sm">
+                <span>BGG #{table.boardgame_id}</span>
                 <span>•</span>
                 <span>{table.gameYear}</span>
               </CardDescription>
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
             <CopyLinkButton id={table.id} />
             <Button
               variant="ghost"
@@ -323,54 +367,78 @@ const Table = ({ table, email }) => {
         </div>
       </CardHeader>
 
-      <CardContent className="pt-4 flex-1">
-        <div className="space-y-3">
-          <div className="flex items-center gap-2 text-sm">
-            <Calendar className="h-4 w-4 text-blue-600" />
-            <span>{format(table.date, "EEEE, MMMM d, yyyy 'at' h:mm a")}</span>
-          </div>
-
-          {table.location !== undefined && <div className="flex items-center gap-2 text-sm">
-            <MapPin className="h-4 w-4 text-red-600" />
-            <span>{table.location}</span>
-          </div>}
-
-          <div className="flex items-center gap-2 text-sm">
-            <Users className="h-4 w-4 text-purple-600" />
-            <span>{table.participants.length}/{table.seats} players</span>
-          </div>
-
-          <div className="mt-4">
-            <h4 className="text-sm font-medium mb-2">Players:</h4>
-            <div className="flex flex-wrap gap-2">
-              {table.participants.map((player, index) => (
-                <span
-                  key={index}
-                  className={`px-2 py-1 rounded-full text-xs ${
-                    index === 0
-                      ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-                      : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
-                  }`}
-                >
-                  {player.name} {index === 0 && '(Host)'}
-                </span>
-              ))}
-              {Array.from({ length: table.seats - table.participants.length }, (_, i) => (
-                <span key={`empty-${i}`} className="px-2 py-1 rounded-full text-xs bg-gray-50 text-gray-400 border-2 border-dashed border-gray-300 dark:bg-gray-800 dark:border-gray-600">
-                  Open seat
-                </span>
-              ))}
+      {/* Game Details */}
+      <CardContent className="pt-6 space-y-4 flex-1">
+        <div className="grid gap-3">
+          <div className="flex items-center gap-3 text-sm">
+            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/20">
+              <Calendar className="h-4 w-4 text-blue-600 dark:text-blue-400" />
             </div>
+            <div>
+              <div className="font-medium">{format(table.date, "EEEE, MMMM d")}</div>
+              <div className="text-muted-foreground text-xs">{format(table.date, "h:mm a")}</div>
+            </div>
+          </div>
+
+          {table.location && (
+            <div className="flex items-center gap-3 text-sm">
+              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-red-100 dark:bg-red-900/20">
+                <MapPin className="h-4 w-4 text-red-600 dark:text-red-400" />
+              </div>
+              <span className="truncate">{table.location}</span>
+            </div>
+          )}
+
+          <div className="flex items-center gap-3 text-sm">
+            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-purple-100 dark:bg-purple-900/20">
+              <Users className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="font-medium">{table.participants.length}/{table.seats} players</span>
+              {isFull && (
+                <span className="text-xs bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400 px-2 py-0.5 rounded-full">
+                  Full
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Players Section */}
+        <div className="space-y-3">
+          <h4 className="text-sm font-semibold text-foreground">Players</h4>
+          <div className="space-y-2">
+            {table.participants.map((player, index) => (
+              <div
+                key={index}
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${
+                  index === 0
+                    ? 'bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/10 dark:to-amber-900/10 border border-yellow-200/50 dark:border-yellow-800/50'
+                    : 'bg-muted/50'
+                }`}
+              >
+                {index === 0 && <Crown className="h-3 w-3 text-yellow-600" />}
+                <span className="font-medium">{player.name}</span>
+                {index === 0 && <span className="text-xs text-yellow-700 dark:text-yellow-400">(Host)</span>}
+              </div>
+            ))}
+            {Array.from({ length: table.seats - table.participants.length }, (_, i) => (
+              <div key={`empty-${i}`} className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm border-2 border-dashed border-muted bg-muted/20">
+                <div className="w-3 h-3 rounded-full bg-muted-foreground/20"></div>
+                <span className="text-muted-foreground italic">Open seat</span>
+              </div>
+            ))}
           </div>
         </div>
       </CardContent>
 
-      <CardFooter className="bg-gray-50 dark:bg-gray-800/50 flex justify-between items-center p-4 mt-auto">
+      {/* Action Footer */}
+      <CardFooter className="border-t bg-muted/20 flex justify-between items-center p-4 mt-auto">
         <div className="flex items-center">
-          {table.creator === email && <DeleteButton id={table.id} />}
+          {isHost && <DeleteButton id={table.id} />}
         </div>
         <div className="flex items-center">
-          {participants.includes(email) ? (
+          {isParticipant ? (
             <LeaveButton id={participant[0].id} />
           ) : (
             <JoinButton table={table} email={email} />
