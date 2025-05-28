@@ -6,8 +6,8 @@ import {
 
 export const toolsList = [
   {
-    id: "game-tables",
-    title: "Board Game Tables",
+    id: "tables",
+    title: "Tables",
     description: "Create and join board game sessions with friends",
     category: "Game Tools",
     icon: <Table className="h-5 w-5" />,

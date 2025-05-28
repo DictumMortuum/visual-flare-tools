@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import { useState } from "react";
+import {v4 as uuidv4} from 'uuid';
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { Search, Plus, Calendar } from "lucide-react";
@@ -9,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarUI } from "@/components/ui/calendar";
+import { useDebounce } from '@uidotdev/usehooks';
 import {
   Form,
   FormControl,
@@ -27,56 +29,72 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
-const SearchGames = ({ }) => {
+const SearchGames = ({ form, setSelectedGame }) => {
+  const [input, setInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-  const [gameResults, setGameResults] = useState([]);
   const [showResults, setShowResults] = useState(false);
+  const debouncedSearchTerm = useDebounce(searchQuery, 1000);
 
-  const searchGames = (query) => {
-    setSearchQuery(query);
-    if (query.length > 2) {
-      const filteredGames = data.filter(game =>
-        game.name.toLowerCase().includes(query.toLowerCase())
-      );
-      setGameResults(filteredGames);
-      setShowResults(true);
-    } else {
-      setGameResults([]);
-      setShowResults(false);
-    }
+  const fetchBoardgames = async (name) => {
+    const rs = await fetch(`${import.meta.env.VITE_APP_ENDPOINT}/rest/boardgames?filter={"name@simplelike":"${name}"}&range=[0,9]`);
+    setShowResults(true);
+    return rs.json();
+  }
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["boardgames_search", debouncedSearchTerm],
+    queryFn: () => fetchBoardgames(debouncedSearchTerm),
+    initialData: [],
+    enabled: !!debouncedSearchTerm,
+  });
+
+  if (isLoading) {
+    return <>Loading...</>;
+  }
+
+  const selectGame = (game) => {
+    setSelectedGame(game);
+    form.setValue("boardgame_id", game.id);
+    form.setValue("boardgame.name", game.name);
+    form.setValue("maxPlayers", game.maxplayers);
+    setShowResults(false);
+    setInput(game.name);
   };
 
   return (
     <div className="relative">
       <Input
         placeholder="Search for a board game..."
-        value={searchQuery}
-        onChange={(e) => searchGames(e.target.value)}
+        value={input}
+        onChange={(e) => {
+          setSearchQuery(e.target.value);
+          setInput(e.target.value);
+        }}
         className="pl-9"
       />
       <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
 
-      {showResults && gameResults.length > 0 && (
+      {showResults && data.length > 0 && (
         <div className="absolute z-10 top-full left-0 right-0 mt-1 bg-background border rounded-md shadow-lg max-h-60 overflow-y-auto">
-          {gameResults.map(game => (
+          {data.map(game => (
             <div
               key={game.id}
               className="p-3 hover:bg-muted cursor-pointer border-b last:border-0 flex items-center gap-3"
               onClick={() => selectGame(game)}
             >
-              <img
+              {game.square200 !== "" && <img
                 src={game.square200}
                 alt={game.name}
                 className="w-12 h-12 rounded-md object-cover"
-              />
+              />}
               <div className="flex-1">
                 <div className="font-medium">{game.name}</div>
                 <div className="text-xs text-muted-foreground flex gap-4 mt-1">
                   <span>BGG ID: {game.id}</span>
-                  <span>{game.year}</span>
-                  <span>{game.minPlayers}-{game.maxPlayers} players</span>
-                  <span>{game.playTime} min</span>
-                  <span>★ {game.rating}</span>
+                  {game.year !== 0 && <span>{game.year}</span>}
+                  {game.minplayers !== 0 && game.maxplayers !== 0 && <span>{game.minplayers}-{game.maxplayers} players</span>}
+                  {/* <span>{game.playTime} min</span> */}
+                  {/* <span>★ {game.rating}</span> */}
                 </div>
               </div>
             </div>
@@ -87,7 +105,7 @@ const SearchGames = ({ }) => {
   )
 }
 
-const Component = ({ data, showCreateForm, setShowCreateForm }) => {
+const Component = ({ email, showCreateForm, setShowCreateForm }) => {
   const queryClient = useQueryClient();
   const [selectedGame, setSelectedGame] = useState(null);
 
@@ -100,41 +118,22 @@ const Component = ({ data, showCreateForm, setShowCreateForm }) => {
       maxPlayers: 4,
       dateTime: new Date(),
       location: "",
-      estimatedDuration: 60,
     },
   });
 
-  const selectGame = (game) => {
-    setSelectedGame(game);
-    form.setValue("boardgame_id", game.id.toString());
-    form.setValue("boardgame.name", game.name);
-    form.setValue("maxPlayers", game.maxPlayers);
-    form.setValue("estimatedDuration", game.playTime);
-    setShowResults(false);
-    setSearchQuery(game.name);
-  };
-
-  const { name, url } = form.getValues();
-
-  const createWishlist = async () => {
-    return fetch(`${import.meta.env.VITE_APP_ENDPOINT}/rest/wishlist`, {
+  const createTable = async payload => {
+    const rs = await fetch(`${import.meta.env.VITE_APP_ENDPOINT}/rest/tables`, {
       method: "POST",
-      body: JSON.stringify({
-        user_id,
-        email,
-        name,
-        url,
-        reserved: false,
-        screenshot: "",
-      })
-    }).then(res => res.json());
+      body: JSON.stringify(payload)
+    });
+    return rs.json();
   }
 
-  const { isPending, mutate } = useMutation({
-    mutationFn: createWishlist,
+  const { mutate } = useMutation({
+    mutationFn: createTable,
     onSuccess: (data, variables, context) => {
-      toast.info('Your wishlist item was saved successfully');
-      queryClient.invalidateQueries({ queryKey: ['wishlist'] });
+      toast.info('Your table was created successfully.');
+      queryClient.invalidateQueries({ queryKey: ['tables'] });
     },
     onError: (error, variables, context) => {
       toast.error('Something went wrong, please try again');
@@ -142,21 +141,19 @@ const Component = ({ data, showCreateForm, setShowCreateForm }) => {
   });
 
   const handleSubmit = () => {
-    if (!user_id || !email) {
-      localStorage.setItem("redirectURL", pathname);
-      navigate("/auth/login");
-      return;
-    }
+    const { boardgame_id, maxPlayers, dateTime, location } = form.getValues();
 
     mutate({
-      user_id,
-      email,
-      url,
-      name,
+      boardgame_id: parseInt(boardgame_id),
+      creator_id: uuidv4(),
+      location,
+      date: dateTime,
+      creator: email,
+      seats: maxPlayers,
     });
-  }
 
-  const createTable = () => {}
+    setShowCreateForm(false);
+  }
 
   return (
     <Dialog open={showCreateForm} onOpenChange={setShowCreateForm}>
@@ -175,7 +172,7 @@ const Component = ({ data, showCreateForm, setShowCreateForm }) => {
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(createTable)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
             {/* Game Search */}
             <FormField
               control={form.control}
@@ -183,7 +180,7 @@ const Component = ({ data, showCreateForm, setShowCreateForm }) => {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Board Game</FormLabel>
-                    <SearchGames />
+                    <SearchGames form={form} setSelectedGame={setSelectedGame} />
                   <FormMessage />
                 </FormItem>
               )}
@@ -255,28 +252,7 @@ const Component = ({ data, showCreateForm, setShowCreateForm }) => {
                       <Input
                         type="number"
                         min="2"
-                        max="12"
-                        {...field}
-                        onChange={(e) => field.onChange(parseInt(e.target.value, 10))}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Estimated Duration */}
-              <FormField
-                control={form.control}
-                name="estimatedDuration"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Duration (minutes)</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        min="15"
-                        max="480"
+                        max="30"
                         {...field}
                         onChange={(e) => field.onChange(parseInt(e.target.value, 10))}
                       />

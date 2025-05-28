@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { Plus, Calendar, Users, MapPin, Clock, Play, UserMinus, Copy, ExternalLink } from "lucide-react";
-import { format } from "date-fns";
-import { useNavigate } from 'react-router-dom';
+import {v4 as uuidv4} from 'uuid';
+import { Plus, Calendar, Users, MapPin, Play, UserMinus, Copy, ExternalLink } from "lucide-react";
+import { format, isAfter } from "date-fns";
+import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
+import { UserContext } from '../../../context';
 import BoardGameTablesDialog from './BoardGameTablesDialog';
 import {
   Card,
@@ -14,6 +16,36 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+
+const TableRouter = () => {
+  const { id } = useParams();
+  const { state: { user } } = React.useContext(UserContext);
+
+  const fetchTable = async ({ id }) => {
+    const rs = await fetch(`${import.meta.env.VITE_APP_ENDPOINT}/rest/tables/${id}`);
+    return rs.json();
+  }
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["table", id],
+    queryFn: () => fetchTable({ id }),
+    initialData: {
+      date: new Date(),
+      participants: [],
+      boardgame: {
+        date: new Date(),
+      },
+    },
+  });
+
+  if (isLoading) {
+    return <>Loading...</>;
+  }
+
+  console.log(data);
+
+  return <Table table={data} email={user.email} />;
+}
 
 const Container = ({ email }) => {
   const navigate = useNavigate();
@@ -44,16 +76,18 @@ const Container = ({ email }) => {
 
 const BoardGameTables = ({ data, email }) => {
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const d = new Date();
+  d.setHours(0);
+  d.setMinutes(0);
 
   const currentTables = data.filter(table =>
-    table.id !== undefined
-    // table.status === "waiting" && isAfter(table.dateTime, new Date())
+    isAfter(table.date, d)
   );
 
   return (
     <div className="space-y-8">
       <div className="flex justify-center">
-        <BoardGameTablesDialog data={data} showCreateForm={showCreateForm} setShowCreateForm={setShowCreateForm} />
+        <BoardGameTablesDialog email={email} showCreateForm={showCreateForm} setShowCreateForm={setShowCreateForm} />
       </div>
 
       {/* Tables Grid */}
@@ -135,8 +169,28 @@ const StartButton = ({ id }) => {
 }
 
 const DeleteButton = ({ id }) => {
+  const queryClient = useQueryClient();
+
+  const deleteTable = async ({ id }) => {
+    const rs = await fetch(`${import.meta.env.VITE_APP_ENDPOINT}/rest/tables/${id}`, {
+      method: "DELETE",
+    });
+    return rs.json();
+  }
+
+  const { mutate } = useMutation({
+    mutationFn: deleteTable,
+    onSuccess: (data, variables, context) => {
+      toast.info('Your table was successfully deleted.');
+      queryClient.invalidateQueries({ queryKey: ['tables'] });
+    },
+    onError: (error, variables, context) => {
+      toast.error('Something went wrong, please try again');
+    }
+  });
+
   const onClick = () => {
-    console.log("Clicked", id)
+    mutate({ id });
   };
 
   return (
@@ -151,8 +205,28 @@ const DeleteButton = ({ id }) => {
 }
 
 const LeaveButton = ({ id }) => {
+  const queryClient = useQueryClient();
+
+  const deleteTableParticipant = async ({ id }) => {
+    const rs = await fetch(`${import.meta.env.VITE_APP_ENDPOINT}/rest/tableparticipants/${id}`, {
+      method: "DELETE",
+    });
+    return rs.json();
+  }
+
+  const { mutate } = useMutation({
+    mutationFn: deleteTableParticipant,
+    onSuccess: (data, variables, context) => {
+      toast.info('Left table.');
+      queryClient.invalidateQueries({ queryKey: ['tables'] });
+    },
+    onError: (error, variables, context) => {
+      toast.error('Something went wrong, please try again');
+    }
+  });
+
   const onClick = () => {
-    console.log("Clicked", id)
+    mutate({ id });
   };
 
   return (
@@ -167,10 +241,35 @@ const LeaveButton = ({ id }) => {
   )
 }
 
-const JoinButton = ({ table }) => {
+const JoinButton = ({ table, email }) => {
+  const queryClient = useQueryClient();
+
+  const createTableParticipant = async payload => {
+    const rs = await fetch(`${import.meta.env.VITE_APP_ENDPOINT}/rest/tableparticipants`, {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
+    return rs.json();
+  }
+
+  const { mutate } = useMutation({
+    mutationFn: createTableParticipant,
+    onSuccess: (data, variables, context) => {
+      toast.info('Joined table.');
+      queryClient.invalidateQueries({ queryKey: ['tables'] });
+    },
+    onError: (error, variables, context) => {
+      toast.error('Something went wrong, please try again');
+    }
+  });
+
   const onClick = () => {
-    console.log("Clicked", table.id)
-  };
+    mutate({
+      table_id: table.id,
+      user_id: uuidv4(),
+      name: email,
+    });
+  }
 
   return (
     <Button
@@ -186,6 +285,9 @@ const JoinButton = ({ table }) => {
 }
 
 const Table = ({ table, email }) => {
+  const participants = table.participants.map(d => d.name);
+  const participant = table.participants.filter(d => d.name === email);
+
   return (
     <Card key={table.id} className="overflow-hidden border-l-4 border-l-blue-500 hover:shadow-lg transition-shadow">
       <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20">
@@ -228,15 +330,10 @@ const Table = ({ table, email }) => {
             <span>{format(table.date, "EEEE, MMMM d, yyyy 'at' h:mm a")}</span>
           </div>
 
-          <div className="flex items-center gap-2 text-sm">
-            <Clock className="h-4 w-4 text-green-600" />
-            <span>~{table.estimatedDuration} minutes</span>
-          </div>
-
-          <div className="flex items-center gap-2 text-sm">
+          {table.location !== undefined && <div className="flex items-center gap-2 text-sm">
             <MapPin className="h-4 w-4 text-red-600" />
             <span>{table.location}</span>
-          </div>
+          </div>}
 
           <div className="flex items-center gap-2 text-sm">
             <Users className="h-4 w-4 text-purple-600" />
@@ -270,16 +367,14 @@ const Table = ({ table, email }) => {
 
       <CardFooter className="bg-gray-50 dark:bg-gray-800/50 flex justify-between items-center">
         <div className="flex gap-2">
-          {table.creator === email ? (
-            <>
-              <StartButton id={table.id} />
-              <DeleteButton id={table.id} />
-            </>
-          ) : table.participants.includes(email) ? (
-            <LeaveButton id={table.id} />
+          <>
+          {table.creator === email && <DeleteButton id={table.id} />}
+          {participants.includes(email) ? (
+            <LeaveButton id={participant[0].id} />
           ) : (
-            <JoinButton table={table} />
+            <JoinButton table={table} email={email} />
           )}
+          </>
         </div>
 
         <span className="text-xs text-muted-foreground">
@@ -291,3 +386,6 @@ const Table = ({ table, email }) => {
 }
 
 export default Container;
+export {
+  TableRouter
+};

@@ -77,7 +77,7 @@ const ToolPage = () => {
         return <DiceRoller />;
       case 'turn-tracker':
         return <TurnTracker />;
-      case 'game-tables':
+      case 'tables':
         return <BoardGameTables email={user.email} />;
       case 'wishlist':
         return <Wishlist email={user.email} />;

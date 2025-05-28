@@ -12,6 +12,7 @@ import ToolPage from "./pages/ToolPage.jsx";
 import NotFound from "./pages/NotFound.jsx";
 import Login from "./components/auth/Login.jsx";
 import { WishlistRouter } from "@/components/tools/general/Wishlist";
+import { TableRouter } from "@/components/tools/boardgame/BoardGameTables";
 import { UserProvider } from './context';
 
 const queryClient = new QueryClient();
@@ -31,6 +32,7 @@ const App = () => (
                   <Route path="/about" element={<About />} />
                   <Route path="/tools/:id" element={<ToolPage />} />
                   <Route path="/wishlist/:email" element={<WishlistRouter />} />
+                  <Route path="/table/:id" element={<TableRouter />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="*" element={<NotFound />} />
                 </Route>
