@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
 import {v4 as uuidv4} from 'uuid';
-import { Plus, Calendar, Users, MapPin, Play, UserMinus, Copy, ExternalLink, Clock, Crown, Gamepad2 } from "lucide-react";
+import { Plus, Calendar, Users, MapPin, Play, UserMinus, Copy, ExternalLink, Clock, Crown, Gamepad2, ChevronDown } from "lucide-react";
 import { format, isAfter } from "date-fns";
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -17,6 +16,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 const TableRouter = () => {
   const { id } = useParams();
@@ -121,7 +126,7 @@ const BoardGameTables = ({ data, email }) => {
               {currentTables.length} {currentTables.length === 1 ? 'table' : 'tables'} available
             </div>
           </div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 gap-6">
             {currentTables.map((table) => (
               <Table key={table.id} table={table} email={email} />
             ))}
@@ -325,7 +330,7 @@ const Table = ({ table, email }) => {
   const isFull = table.participants.length >= table.seats;
 
   return (
-    <Card className="group overflow-hidden border hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-card/50 backdrop-blur-sm">
+    <Card className="group overflow-hidden border hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-card/50 backdrop-blur-sm flex flex-col h-full">
       {/* Game Header */}
       <CardHeader className="relative bg-gradient-to-br from-primary/5 via-primary/3 to-transparent border-b">
         <div className="flex justify-between items-start gap-4">
@@ -368,7 +373,7 @@ const Table = ({ table, email }) => {
       </CardHeader>
 
       {/* Game Details */}
-      <CardContent className="pt-6 space-y-4 flex-1">
+      <CardContent className="pt-6 space-y-4 flex-1 overflow-hidden">
         <div className="grid gap-3">
           <div className="flex items-center gap-3 text-sm">
             <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/20">
@@ -389,51 +394,60 @@ const Table = ({ table, email }) => {
             </div>
           )}
 
-          <div className="flex items-center gap-3 text-sm">
-            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-purple-100 dark:bg-purple-900/20">
-              <Users className="h-4 w-4 text-purple-600 dark:text-purple-400" />
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="font-medium">{table.participants.length}/{table.seats} players</span>
-              {isFull && (
-                <span className="text-xs bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400 px-2 py-0.5 rounded-full">
-                  Full
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Players Section */}
-        <div className="space-y-3">
-          <h4 className="text-sm font-semibold text-foreground">Players</h4>
-          <div className="space-y-2">
-            {table.participants.map((player, index) => (
-              <div
-                key={index}
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${
-                  index === 0
-                    ? 'bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/10 dark:to-amber-900/10 border border-yellow-200/50 dark:border-yellow-800/50'
-                    : 'bg-muted/50'
-                }`}
-              >
-                {index === 0 && <Crown className="h-3 w-3 text-yellow-600" />}
-                <span className="font-medium">{player.name}</span>
-                {index === 0 && <span className="text-xs text-yellow-700 dark:text-yellow-400">(Host)</span>}
+          <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="players" className="border-none">
+              <div className="flex items-center gap-3 text-sm w-full">
+                <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-purple-100 dark:bg-purple-900/20">
+                  <Users className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                </div>
+                <AccordionTrigger className="flex-1 py-0 hover:no-underline [&>svg]:hidden">
+                  <div className="flex w-full items-center justify-between">
+                    <div className="flex w-full items-center gap-2">
+                      <span className="font-medium">{table.participants.length}/{table.seats} players</span>
+                      {isFull && (
+                        <span className="text-xs bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400 px-2 py-0.5 rounded-full">
+                          Full
+                        </span>
+                      )}
+                    </div>
+                    <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 text-muted-foreground data-[state=open]:rotate-180" />
+                  </div>
+                </AccordionTrigger>
               </div>
-            ))}
-            {Array.from({ length: table.seats - table.participants.length }, (_, i) => (
-              <div key={`empty-${i}`} className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm border-2 border-dashed border-muted bg-muted/20">
-                <div className="w-3 h-3 rounded-full bg-muted-foreground/20"></div>
-                <span className="text-muted-foreground italic">Open seat</span>
-              </div>
-            ))}
-          </div>
+              <AccordionContent className="mt-2 overflow-auto">
+                <div className="space-y-2">
+                  {table.participants.map((player, index) => (
+                    <div
+                      key={index}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${
+                        index === 0
+                          ? 'bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/10 dark:to-amber-900/10 border border-yellow-200/50 dark:border-yellow-800/50'
+                          : 'bg-muted/50'
+                      }`}
+                    >
+                      {index === 0 && <Crown className="h-3 w-3 text-yellow-600" />}
+                      <span className="font-medium">{player.name}</span>
+                      {index === 0 && <span className="text-xs text-yellow-700 dark:text-yellow-400">(Host)</span>}
+                    </div>
+                  ))}
+                  {Array.from({ length: table.seats - table.participants.length }, (_, i) => (
+                    <div
+                      key={`empty-${i}`}
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm bg-gradient-to-r from-muted/5 to-muted/10 border border-dashed border-muted/40"
+                    >
+                      <div className="w-2 h-2 rounded-full bg-muted-foreground/20 animate-pulse"></div>
+                      <span className="text-muted-foreground/60">Available Seat</span>
+                    </div>
+                  ))}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         </div>
       </CardContent>
 
       {/* Action Footer */}
-      <CardFooter className="border-t bg-muted/20 flex justify-between items-center p-4 mt-auto">
+      <CardFooter className="border-t bg-muted/20 p-4 h-[60px] flex justify-between items-center mt-auto">
         <div className="flex items-center">
           {isHost && <DeleteButton id={table.id} />}
         </div>
