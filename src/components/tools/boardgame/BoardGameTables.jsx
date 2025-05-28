@@ -289,7 +289,7 @@ const Table = ({ table, email }) => {
   const participant = table.participants.filter(d => d.name === email);
 
   return (
-    <Card key={table.id} className="overflow-hidden border-l-4 border-l-blue-500 hover:shadow-lg transition-shadow">
+    <Card key={table.id} className="overflow-hidden border-l-4 border-l-blue-500 hover:shadow-lg transition-shadow flex flex-col">
       <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20">
         <div className="flex justify-between items-start">
           <div className="flex items-center gap-4">
@@ -323,7 +323,7 @@ const Table = ({ table, email }) => {
         </div>
       </CardHeader>
 
-      <CardContent className="pt-4">
+      <CardContent className="pt-4 flex-1">
         <div className="space-y-3">
           <div className="flex items-center gap-2 text-sm">
             <Calendar className="h-4 w-4 text-blue-600" />
@@ -365,21 +365,15 @@ const Table = ({ table, email }) => {
         </div>
       </CardContent>
 
-      <CardFooter className="bg-gray-50 dark:bg-gray-800/50 flex justify-between items-center">
+      <CardFooter className="bg-gray-50 dark:bg-gray-800/50 flex justify-center items-center p-4 mt-auto">
         <div className="flex gap-2">
-          <>
           {table.creator === email && <DeleteButton id={table.id} />}
           {participants.includes(email) ? (
             <LeaveButton id={participant[0].id} />
           ) : (
             <JoinButton table={table} email={email} />
           )}
-          </>
         </div>
-
-        <span className="text-xs text-muted-foreground">
-          Created {format(table.date, "MMM d 'at' h:mm a")}
-        </span>
       </CardFooter>
     </Card>
   )
