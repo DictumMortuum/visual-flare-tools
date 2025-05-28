@@ -78,7 +78,7 @@ const ToolPage = () => {
       case 'turn-tracker':
         return <TurnTracker />;
       case 'game-tables':
-        return <BoardGameTables />;
+        return <BoardGameTables email={user.email} />;
       case 'wishlist':
         return <Wishlist email={user.email} />;
       default:
