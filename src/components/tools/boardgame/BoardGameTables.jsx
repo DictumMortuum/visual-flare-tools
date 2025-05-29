@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
 import {v4 as uuidv4} from 'uuid';
-import { Plus, Calendar, Users, MapPin, Play, UserMinus, Copy, ExternalLink, Clock, Crown, Gamepad2, ChevronDown } from "lucide-react";
+import { Plus, Notebook, Calendar, Users, MapPin, Play, UserMinus, Copy, ExternalLink, Clock, Crown, School, Gamepad2, ChevronDown } from "lucide-react";
 import { format, isAfter } from "date-fns";
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -326,6 +326,8 @@ const Table = ({ table, email }) => {
   const isHost = table.creator === email;
   const isParticipant = participants.includes(email);
   const isFull = table.participants.length >= table.seats;
+  const isTeaching = table.teaching === true
+  const [open, setOpen] = React.useState("");
 
   return (
     <Card className="group overflow-hidden border hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-card/50 backdrop-blur-sm flex flex-col h-full">
@@ -340,8 +342,13 @@ const Table = ({ table, email }) => {
                 className="w-16 h-16 rounded-xl object-cover shadow-lg ring-2 ring-white/20"
               />
               {isHost && (
+                <div className="absolute -top-2 -left-2 bg-yellow-500 rounded-full p-1">
+                  <Crown className="h-3 w-3 text-black" />
+                </div>
+              )}
+              {isTeaching && (
                 <div className="absolute -top-2 -right-2 bg-yellow-500 rounded-full p-1">
-                  <Crown className="h-3 w-3 text-white" />
+                  <Notebook className="h-3 w-3 text-black" />
                 </div>
               )}
             </div>
@@ -349,11 +356,25 @@ const Table = ({ table, email }) => {
               <CardTitle className="text-xl font-bold text-foreground truncate">
                 {table.boardgame.name}
               </CardTitle>
-              <CardDescription className="flex items-center gap-2 mt-1 text-sm">
+              {/* <CardDescription className="flex items-center gap-2 mt-1 text-sm">
+                <div className="bg-yellow-500 rounded-full p-1">
+                  <Gamepad2 className="h-3 w-3 text-black" />
+                </div>
                 <span>BGG #{table.boardgame_id}</span>
-                <span>•</span>
-                <span>{table.gameYear}</span>
+                <span>{table?.boardgame.year}</span>
+              </CardDescription> */}
+              <CardDescription className="flex items-center gap-2 mt-1 text-sm">
+                <div className="bg-yellow-500 rounded-full p-1">
+                  <Crown className="h-3 w-3 text-black" />
+                </div>
+                {table.creator}
               </CardDescription>
+              {isTeaching && <CardDescription className="flex items-center gap-2 mt-1 text-sm">
+                <div className="bg-yellow-500 rounded-full p-1">
+                  <Notebook className="h-3 w-3 text-black" />
+                </div>
+                Teaching included
+              </CardDescription>}
             </div>
           </div>
           <div className="flex gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
@@ -373,45 +394,71 @@ const Table = ({ table, email }) => {
       {/* Game Details */}
       <CardContent className="pt-6 space-y-4 flex-1 overflow-hidden">
         <div className="grid gap-3">
-          <div className="flex items-center gap-3 text-sm">
-            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/20">
-              <Calendar className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+          <div className="flex items-center justify-between gap-3 text-sm">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/20">
+                <Calendar className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div>
+                <div className="font-medium">{format(table.date, "EEEE, MMMM d")}</div>
+                <div className="text-muted-foreground text-xs">{format(table.date, "h:mm a")}</div>
+              </div>
             </div>
-            <div>
-              <div className="font-medium">{format(table.date, "EEEE, MMMM d")}</div>
-              <div className="text-muted-foreground text-xs">{format(table.date, "h:mm a")}</div>
-            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                const event = {
+                  text: `${table.boardgame.name} Board Game Night`,
+                  dates: format(table.date, "yyyyMMdd'T'HHmmss"),
+                  location: table.location || '',
+                  details: `Join us for ${table.boardgame.name}! Table hosted by ${table.creator}`
+                };
+
+                const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.text)}&dates=${event.dates}/${event.dates}&location=${encodeURIComponent(event.location)}&details=${encodeURIComponent(event.details)}`;
+                window.open(url, '_blank');
+              }}
+              title="Add to Calendar"
+            >
+              <Clock className="h-4 w-4" />
+            </Button>
           </div>
 
           {table.location && (
             <div className="flex items-center gap-3 text-sm">
-              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-red-100 dark:bg-red-900/20">
-                <MapPin className="h-4 w-4 text-red-600 dark:text-red-400" />
+              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/20">
+                <MapPin className="h-4 w-4 text-blue-600 dark:text-blue-400" />
               </div>
               <span className="truncate">{table.location}</span>
             </div>
           )}
 
-          <Accordion type="single" collapsible className="w-full">
-            <AccordionItem value="players" className="border-none">
-              <div className="flex items-center gap-3 text-sm w-full">
-                <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-purple-100 dark:bg-purple-900/20">
-                  <Users className="h-4 w-4 text-purple-600 dark:text-purple-400" />
-                </div>
-                <AccordionTrigger className="flex-1 py-0 hover:no-underline [&>svg]:hidden">
-                  <div className="flex w-full items-center justify-between">
-                    <div className="flex w-full items-center gap-2">
-                      <span className="font-medium">{table.participants.length}/{table.seats} players</span>
-                      {isFull && (
-                        <span className="text-xs bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400 px-2 py-0.5 rounded-full">
-                          Full
-                        </span>
-                      )}
-                    </div>
-                    <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 text-muted-foreground data-[state=open]:rotate-180" />
-                  </div>
-                </AccordionTrigger>
+          <div className="flex items-center justify-between gap-3 text-sm">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/20">
+                <Users className="h-4 w-4 text-blue-600 dark:text-blue-400" />
               </div>
+              <div>
+                <span className="font-medium">{table.participants.length}/{table.seats} players</span>
+                {isFull && (
+                  <span className="text-xs bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400 px-2 py-0.5 rounded-full">
+                    Full
+                  </span>
+                )}
+              </div>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              title="Add to Calendar"
+              onClick={() => open === "" ? setOpen("players") : setOpen("")}
+            >
+              <ChevronDown className="h-4 w-4" />
+            </Button>
+          </div>
+
+          <Accordion type="single" value={open} onValueChange={setOpen} collapsible className="w-full">
+            <AccordionItem value="players" className="border-none">
               <AccordionContent className="mt-2 overflow-auto">
                 <div className="space-y-2">
                   {table.participants.map((player, index) => (
@@ -423,9 +470,9 @@ const Table = ({ table, email }) => {
                           : 'bg-muted/50'
                       }`}
                     >
-                      {index === 0 && <Crown className="h-3 w-3 text-yellow-600" />}
+                      {player.name === table.creator && <Crown className="h-3 w-3 text-yellow-600" />}
                       <span className="font-medium">{player.name}</span>
-                      {index === 0 && <span className="text-xs text-yellow-700 dark:text-yellow-400">(Host)</span>}
+                      {player.name === table.creator && <span className="text-xs text-yellow-700 dark:text-yellow-400">(Host)</span>}
                     </div>
                   ))}
                   {Array.from({ length: table.seats - table.participants.length }, (_, i) => (

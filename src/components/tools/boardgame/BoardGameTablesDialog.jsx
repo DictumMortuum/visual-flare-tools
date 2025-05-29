@@ -7,6 +7,7 @@ import { format, isBefore } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarUI } from "@/components/ui/calendar";
@@ -118,6 +119,7 @@ const Component = ({ email, showCreateForm, setShowCreateForm }) => {
       maxPlayers: 4,
       dateTime: new Date(),
       location: "",
+      teaching: false,
     },
   });
 
@@ -141,7 +143,7 @@ const Component = ({ email, showCreateForm, setShowCreateForm }) => {
   });
 
   const handleSubmit = () => {
-    const { boardgame_id, maxPlayers, dateTime, location } = form.getValues();
+    const { boardgame_id, maxPlayers, dateTime, location, teaching } = form.getValues();
 
     if (boardgame_id === "") {
       toast.error('Please select a boardgame.');
@@ -155,6 +157,7 @@ const Component = ({ email, showCreateForm, setShowCreateForm }) => {
       date: dateTime,
       creator: email,
       seats: maxPlayers,
+      teaching,
     });
 
     setSelectedGame(null);
@@ -194,7 +197,18 @@ const Component = ({ email, showCreateForm, setShowCreateForm }) => {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Board Game</FormLabel>
+                  <div className="space-y-4">
                     <SearchGames form={form} setSelectedGame={setSelectedGame} />
+                    {selectedGame?.square200 && (
+                      <div className="flex ">
+                        <img
+                          src={selectedGame.square200}
+                          alt={selectedGame.name}
+                          className="w-32 h-32 rounded-xl object-cover shadow-lg ring-2 ring-white/20"
+                        />
+                      </div>
+                    )}
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}
@@ -276,6 +290,36 @@ const Component = ({ email, showCreateForm, setShowCreateForm }) => {
                 )}
               />
             </div>
+
+            {/* Teaching */}
+            <FormField
+              control={form.control}
+              name="teaching"
+              render={({ field }) => (
+                <FormItem>
+                  {/* <FormLabel>Teaching</FormLabel> */}
+                  <FormControl>
+                    <div className="flex items-center space-x-3">
+                      <Checkbox
+                        {...field}
+                        checked={field.value}
+                        onCheckedChange={(e) => {
+                          field.onChange(e);
+                        }}
+                        id="teaching-checkbox"
+                      />
+                      <label
+                        htmlFor="teaching-checkbox"
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      >
+                        Teaching included
+                      </label>
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             {/* Location */}
             <FormField
