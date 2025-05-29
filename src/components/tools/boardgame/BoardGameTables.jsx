@@ -94,7 +94,7 @@ const BoardGameTables = ({ data, email }) => {
 
   const currentTables = data.filter(table =>
     isAfter(table.date, d)
-  );
+  ).sort((a, b) => new Date(b.date) - new Date(a.date))
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto">
