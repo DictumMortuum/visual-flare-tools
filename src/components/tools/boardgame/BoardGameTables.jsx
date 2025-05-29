@@ -52,8 +52,6 @@ const TableRouter = () => {
     );
   }
 
-  console.log(data);
-
   return <Table table={data} email={user.email} />;
 }
 

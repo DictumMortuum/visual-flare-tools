@@ -143,6 +143,11 @@ const Component = ({ email, showCreateForm, setShowCreateForm }) => {
   const handleSubmit = () => {
     const { boardgame_id, maxPlayers, dateTime, location } = form.getValues();
 
+    if (boardgame_id === "") {
+      toast.error('Please select a boardgame.');
+      return
+    }
+
     mutate({
       boardgame_id: parseInt(boardgame_id),
       creator_id: uuidv4(),
@@ -152,11 +157,20 @@ const Component = ({ email, showCreateForm, setShowCreateForm }) => {
       seats: maxPlayers,
     });
 
+    setSelectedGame(null);
     setShowCreateForm(false);
   }
 
   return (
-    <Dialog open={showCreateForm} onOpenChange={setShowCreateForm}>
+    <Dialog
+      open={showCreateForm}
+      onOpenChange={
+        e => {
+          setSelectedGame(null);
+          setShowCreateForm(e);
+        }
+      }
+    >
       <DialogTrigger asChild>
         <Button size="lg" className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700">
           <Plus className="mr-2 h-5 w-5" />
@@ -251,7 +265,7 @@ const Component = ({ email, showCreateForm, setShowCreateForm }) => {
                     <FormControl>
                       <Input
                         type="number"
-                        min="2"
+                        min="0"
                         max="30"
                         {...field}
                         onChange={(e) => field.onChange(parseInt(e.target.value, 10))}
@@ -285,7 +299,13 @@ const Component = ({ email, showCreateForm, setShowCreateForm }) => {
             />
 
             <div className="flex justify-end gap-3 pt-4">
-              <Button type="button" variant="outline" onClick={() => setShowCreateForm(false)}>
+              {selectedGame !== null && selectedGame?.square200 === "" && <UpdateBoardgameButton id={selectedGame?.id} />}
+              <Button type="button" variant="outline" onClick={
+                () => {
+                  setSelectedGame(null);
+                  setShowCreateForm(false);
+                }
+              }>
                 Cancel
               </Button>
               <Button type="submit" className="bg-green-600 hover:bg-green-700">
@@ -297,6 +317,43 @@ const Component = ({ email, showCreateForm, setShowCreateForm }) => {
       </DialogContent>
     </Dialog>
   );
+}
+
+const UpdateBoardgameButton = ({ id }) => {
+  const queryClient = useQueryClient();
+
+  const updateBoardgame = async ({ id }) => {
+    const rs = await fetch(`${import.meta.env.VITE_APP_ENDPOINT}/boardgames/info/${id}`, {
+      method: "GET",
+    });
+    return rs.json();
+  }
+
+  const { mutate } = useMutation({
+    mutationFn: updateBoardgame,
+    onSuccess: (data, variables, context) => {
+      toast.info('Boardgame was successfully updated.');
+      queryClient.invalidateQueries({ queryKey: ['tables'] });
+    },
+    onError: (error, variables, context) => {
+      toast.error('Something went wrong, please try again');
+    }
+  });
+
+  const onClick = e => {
+    e.preventDefault();
+    mutate({ id });
+    e.stopPropagation();
+  };
+
+  return (
+    <Button
+      variant="outline"
+      onClick={onClick}
+    >
+      Update Boardgame Info
+    </Button>
+  )
 }
 
 export default Component;
