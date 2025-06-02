@@ -10,6 +10,7 @@ import { UserContext } from '../context';
 import DiceRoller from "@/components/tools/boardgame/DiceRoller";
 import TurnTracker from "@/components/tools/boardgame/TurnTracker";
 import BoardGameTables from "@/components/tools/boardgame/BoardGameTables";
+import GameFinder from "@/components/tools/boardgame/GameFinder";
 import Wishlist from "@/components/tools/general/Wishlist";
 import { useNavigate } from 'react-router-dom';
 
@@ -79,6 +80,8 @@ const ToolPage = () => {
         return <TurnTracker />;
       case 'tables':
         return <BoardGameTables email={user.email} />;
+      case 'game-finder':
+        return <GameFinder />;
       case 'wishlist':
         return <Wishlist email={user.email} />;
       default:

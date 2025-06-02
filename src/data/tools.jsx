@@ -1,7 +1,8 @@
 
 import {
   Bookmark,
-  Table
+  Table,
+  Search
 } from "lucide-react";
 
 export const toolsList = [
@@ -11,6 +12,13 @@ export const toolsList = [
     description: "Create and join board game sessions with friends",
     category: "Game Tools",
     icon: <Table className="h-5 w-5" />,
+  },
+  {
+    id: "game-finder",
+    title: "Game Finder",
+    description: "Find the perfect board game for your group based on players, preferences, and more",
+    category: "Game Tools",
+    icon: <Search className="h-5 w-5" />,
   },
   {
     id: "wishlist",
