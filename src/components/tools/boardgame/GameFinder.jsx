@@ -29,10 +29,11 @@ const GameFinder = () => {
     maxRating: 10,
     minWeight: 0,
     maxWeight: 5,
-    mechanics: "",
-    categories: "",
-    subdomains: "",
-    families: "",
+    options: [],
+    mechanics: [],
+    categories: [],
+    subdomains: [],
+    families: [],
     cooperative: false,
     solitaire: false,
     team: false
@@ -249,7 +250,7 @@ const GameFinder = () => {
                     <SelectValue placeholder="Select mechanics" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Mechanics</SelectItem>
+                    <SelectItem value="all">All Mechanics</SelectItem>
                     {data.mechanics && data.mechanics.map((mechanic, index) => (
                       <SelectItem key={index} value={mechanic}>
                         {mechanic}
@@ -270,7 +271,7 @@ const GameFinder = () => {
                     <SelectValue placeholder="Select categories" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Categories</SelectItem>
+                    <SelectItem value="all">All Categories</SelectItem>
                     {data.categories && data.categories.map((category, index) => (
                       <SelectItem key={index} value={category}>
                         {category}
@@ -291,7 +292,7 @@ const GameFinder = () => {
                     <SelectValue placeholder="Select subdomains" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Subdomains</SelectItem>
+                    <SelectItem value="all">All Subdomains</SelectItem>
                     {data.subdomains && data.subdomains.map((subdomain, index) => (
                       <SelectItem key={index} value={subdomain}>
                         {subdomain}
@@ -312,7 +313,7 @@ const GameFinder = () => {
                     <SelectValue placeholder="Select families" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Families</SelectItem>
+                    <SelectItem value="all">All Families</SelectItem>
                     {data.families && data.families.map((family, index) => (
                       <SelectItem key={index} value={family}>
                         {family}
