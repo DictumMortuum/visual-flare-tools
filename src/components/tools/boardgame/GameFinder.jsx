@@ -3,35 +3,39 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Search, Star, Users, Calendar, Filter, RotateCcw } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Search, Star, Users, Calendar, Filter, RotateCcw, Gamepad2, Tag, Hash, TreePine, Scale } from "lucide-react";
 
 const ratingFilter = (min, max) => d => {
   const avg = parseFloat(d.average.replace("\"", ""));
   return min <= avg && max >= avg
 }
 
-const playersFilter = (min, best) => d => {
-  if (best) {
-    return d.best_min_players <= min && d.best_max_players >= min
-  } else {
-    return d.best_min_players <= min && d.best_max_players >= min
-  }
+const playersFilter = (count) => d => {
+  return d.best_min_players <= count && d.best_max_players >= count
 }
 
 const GameFinder = () => {
   const [filters, setFilters] = useState({
-    minPlayers: 3,
-    maxPlayers: 8,
+    playerCount: 4,
     minYear: 2000,
     maxYear: new Date().getFullYear(),
     minRating: 7,
     maxRating: 10,
+    minWeight: 0,
+    maxWeight: 5,
+    mechanics: "",
+    categories: "",
+    subdomains: "",
+    families: "",
     cooperative: false,
-    solitaire: false
+    solitaire: false,
+    team: false
   });
 
   const [showFilters, setShowFilters] = useState(true);
@@ -53,7 +57,7 @@ const GameFinder = () => {
 
   const games = data.options
     .filter(ratingFilter(filters.minRating, filters.maxRating))
-    .filter(playersFilter(filters.minPlayers, true))
+    .filter(playersFilter(filters.playerCount))
 
   const handleFilterChange = (key, value) => {
     setFilters(prev => ({ ...prev, [key]: value }));
@@ -61,14 +65,20 @@ const GameFinder = () => {
 
   const resetFilters = () => {
     setFilters({
-      minPlayers: 3,
-      maxPlayers: 8,
+      playerCount: 4,
       minYear: 2000,
       maxYear: new Date().getFullYear(),
       minRating: 7,
       maxRating: 10,
+      minWeight: 0,
+      maxWeight: 5,
+      mechanics: "",
+      categories: "",
+      subdomains: "",
+      families: "",
       cooperative: false,
-      solitaire: false
+      solitaire: false,
+      team: false
     });
   };
 
@@ -112,32 +122,14 @@ const GameFinder = () => {
                   <Users className="h-4 w-4" />
                   Player Count
                 </Label>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-muted-foreground w-8">Min:</span>
-                    <Slider
-                      value={[filters.minPlayers]}
-                      onValueChange={(value) => handleFilterChange("minPlayers", value[0])}
-                      max={10}
-                      min={1}
-                      step={1}
-                      className="flex-1"
-                    />
-                    <span className="text-sm font-medium w-8">{filters.minPlayers}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-muted-foreground w-8">Max:</span>
-                    <Slider
-                      value={[filters.maxPlayers]}
-                      onValueChange={(value) => handleFilterChange("maxPlayers", value[0])}
-                      max={20}
-                      min={1}
-                      step={1}
-                      className="flex-1"
-                    />
-                    <span className="text-sm font-medium w-8">{filters.maxPlayers}</span>
-                  </div>
-                </div>
+                <Input
+                  type="number"
+                  min="1"
+                  max="20"
+                  value={filters.playerCount}
+                  onChange={(e) => handleFilterChange("playerCount", parseInt(e.target.value) || 1)}
+                  className="text-center"
+                />
               </div>
 
               {/* Year Range */}
@@ -208,6 +200,108 @@ const GameFinder = () => {
                 </div>
               </div>
 
+              {/* Weight Range */}
+              <div className="space-y-3">
+                <Label className="text-sm font-medium flex items-center gap-2">
+                  <Scale className="h-4 w-4" />
+                  Game Weight
+                </Label>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground w-8">Min:</span>
+                    <Slider
+                      value={[filters.minWeight]}
+                      onValueChange={(value) => handleFilterChange("minWeight", value[0])}
+                      max={5}
+                      min={0}
+                      step={0.1}
+                      className="flex-1"
+                    />
+                    <span className="text-sm font-medium w-8">{filters.minWeight.toFixed(1)}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground w-8">Max:</span>
+                    <Slider
+                      value={[filters.maxWeight]}
+                      onValueChange={(value) => handleFilterChange("maxWeight", value[0])}
+                      max={5}
+                      min={0}
+                      step={0.1}
+                      className="flex-1"
+                    />
+                    <span className="text-sm font-medium w-8">{filters.maxWeight.toFixed(1)}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Mechanics */}
+              <div className="space-y-3">
+                <Label className="text-sm font-medium flex items-center gap-2">
+                  <Gamepad2 className="h-4 w-4" />
+                  Mechanics
+                </Label>
+                <Select value={filters.mechanics} onValueChange={(value) => handleFilterChange("mechanics", value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select mechanics" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">All Mechanics</SelectItem>
+                    {/* Mechanics options will be populated from query */}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Categories */}
+              <div className="space-y-3">
+                <Label className="text-sm font-medium flex items-center gap-2">
+                  <Tag className="h-4 w-4" />
+                  Categories
+                </Label>
+                <Select value={filters.categories} onValueChange={(value) => handleFilterChange("categories", value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select categories" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">All Categories</SelectItem>
+                    {/* Categories options will be populated from query */}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Subdomains */}
+              <div className="space-y-3">
+                <Label className="text-sm font-medium flex items-center gap-2">
+                  <Hash className="h-4 w-4" />
+                  Subdomains
+                </Label>
+                <Select value={filters.subdomains} onValueChange={(value) => handleFilterChange("subdomains", value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select subdomains" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">All Subdomains</SelectItem>
+                    {/* Subdomains options will be populated from query */}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Families */}
+              <div className="space-y-3">
+                <Label className="text-sm font-medium flex items-center gap-2">
+                  <TreePine className="h-4 w-4" />
+                  Families
+                </Label>
+                <Select value={filters.families} onValueChange={(value) => handleFilterChange("families", value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select families" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">All Families</SelectItem>
+                    {/* Families options will be populated from query */}
+                  </SelectContent>
+                </Select>
+              </div>
+
               {/* Game Types */}
               <div className="space-y-3 md:col-span-2 lg:col-span-3">
                 <Label className="text-sm font-medium">Game Types</Label>
@@ -227,6 +321,14 @@ const GameFinder = () => {
                       onCheckedChange={(checked) => handleFilterChange("solitaire", checked)}
                     />
                     <Label htmlFor="solitaire" className="text-sm">Solo-Friendly Games</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="team"
+                      checked={filters.team}
+                      onCheckedChange={(checked) => handleFilterChange("team", checked)}
+                    />
+                    <Label htmlFor="team" className="text-sm">Team Games</Label>
                   </div>
                 </div>
               </div>
@@ -293,6 +395,7 @@ const GameFinder = () => {
                   <div className="flex gap-2">
                     {game.cooperative && <Badge className="bg-green-100 text-green-800">Cooperative</Badge>}
                     {game.solitaire && <Badge className="bg-blue-100 text-blue-800">Solo-Friendly</Badge>}
+                    {game.team && <Badge className="bg-purple-100 text-purple-800">Team</Badge>}
                   </div>
                 </CardContent>
               </Card>

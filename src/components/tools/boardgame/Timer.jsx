@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Timer as TimerIcon, Pause, Play, SkipForward, RotateCcw, Users } from "lucide-react";
+import { Timer as TimerIcon, Pause, Play, SkipForward, RotateCcw, Users, Eye, EyeOff, BarChart3 } from "lucide-react";
+import GameStatistics from "./GameStatistics";
 
 const Timer = () => {
   const [playerCount, setPlayerCount] = useState(3);
@@ -16,6 +17,8 @@ const Timer = () => {
   const [gameStarted, setGameStarted] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [currentRound, setCurrentRound] = useState(1);
+  const [hidePlayerTimes, setHidePlayerTimes] = useState(false);
+  const [showStatistics, setShowStatistics] = useState(false);
   
   const intervalRef = useRef(null);
 
@@ -35,6 +38,8 @@ const Timer = () => {
     setCurrentRound(1);
     setIsRunning(true);
     setIsPaused(false);
+    setHidePlayerTimes(false);
+    setShowStatistics(false);
   };
 
   // Reset everything
@@ -46,9 +51,31 @@ const Timer = () => {
     setCurrentTime(0);
     setCurrentRound(1);
     setPlayers([]);
+    setHidePlayerTimes(false);
+    setShowStatistics(false);
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
     }
+  };
+
+  // End game and show statistics
+  const endGame = () => {
+    // Add current time to current player's total
+    setPlayers(prev => prev.map(player => {
+      if (player.id === currentPlayer) {
+        return { 
+          ...player, 
+          totalTime: player.totalTime + currentTime, 
+          turns: player.turns + 1,
+          isActive: false 
+        };
+      }
+      return { ...player, isActive: false };
+    }));
+    
+    setIsRunning(false);
+    setIsPaused(false);
+    setShowStatistics(true);
   };
 
   // Toggle pause/resume
@@ -141,6 +168,16 @@ const Timer = () => {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
+  if (showStatistics) {
+    return (
+      <GameStatistics 
+        players={players}
+        currentRound={currentRound}
+        onBack={() => setShowStatistics(false)}
+      />
+    );
+  }
+
   if (!gameStarted) {
     return (
       <div className="space-y-6 max-w-md mx-auto">
@@ -212,7 +249,7 @@ const Timer = () => {
           </div>
 
           {/* Control Buttons */}
-          <div className="flex justify-center gap-4">
+          <div className="flex justify-center gap-2 flex-wrap">
             <Button 
               variant="outline" 
               size="lg"
@@ -240,6 +277,33 @@ const Timer = () => {
             >
               <SkipForward className="h-5 w-5 mr-2" />
               Next Player
+            </Button>
+
+            <Button 
+              variant="outline"
+              size="lg"
+              onClick={() => setHidePlayerTimes(!hidePlayerTimes)}
+            >
+              {hidePlayerTimes ? (
+                <>
+                  <Eye className="h-5 w-5 mr-2" />
+                  Show Times
+                </>
+              ) : (
+                <>
+                  <EyeOff className="h-5 w-5 mr-2" />
+                  Hide Times
+                </>
+              )}
+            </Button>
+
+            <Button 
+              variant="secondary"
+              size="lg"
+              onClick={endGame}
+            >
+              <BarChart3 className="h-5 w-5 mr-2" />
+              End Game
             </Button>
 
             <Button 
@@ -282,7 +346,10 @@ const Timer = () => {
                   <div className="text-center space-y-2">
                     <h3 className="font-semibold">{player.name}</h3>
                     <div className="text-2xl font-mono font-bold">
-                      {formatTime(player.totalTime + (player.isActive ? currentTime : 0))}
+                      {hidePlayerTimes ? 
+                        formatTime(player.isActive ? currentTime : 0) : 
+                        formatTime(player.totalTime + (player.isActive ? currentTime : 0))
+                      }
                     </div>
                     <div className="text-sm text-muted-foreground">
                       {player.turns} turn{player.turns !== 1 ? 's' : ''}
