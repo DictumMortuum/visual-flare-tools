@@ -2,7 +2,8 @@
 import {
   Bookmark,
   Table,
-  Search
+  Search,
+  Timer
 } from "lucide-react";
 
 export const toolsList = [
@@ -19,6 +20,13 @@ export const toolsList = [
     description: "Find the perfect board game for your group based on players, preferences, and more",
     category: "boardgames",
     icon: <Search className="h-5 w-5" />,
+  },
+  {
+    id: "timer",
+    title: "Timer",
+    description: "Multi-player chess clock to track thinking time for each player",
+    category: "boardgames",
+    icon: <Timer className="h-5 w-5" />,
   },
   {
     id: "wishlist",

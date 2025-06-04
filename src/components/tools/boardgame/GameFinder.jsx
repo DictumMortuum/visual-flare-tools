@@ -2,14 +2,12 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Search, Star, Users, Calendar, Filter, RotateCcw } from "lucide-react";
-import { toast } from "sonner";
 
 const ratingFilter = (min, max) => d => {
   const avg = parseFloat(d.average.replace("\"", ""));
@@ -33,8 +31,7 @@ const GameFinder = () => {
     minRating: 7,
     maxRating: 10,
     cooperative: false,
-    solitaire: false,
-    searchTerm: ""
+    solitaire: false
   });
 
   const [showFilters, setShowFilters] = useState(true);
@@ -71,16 +68,11 @@ const GameFinder = () => {
       minRating: 7,
       maxRating: 10,
       cooperative: false,
-      solitaire: false,
-      searchTerm: ""
+      solitaire: false
     });
   };
 
   const searchGames = () => {
-    // if (!filters.searchTerm && filters.minPlayers === 1 && filters.maxPlayers === 8) {
-    //   toast.error("Please set some search criteria to find games");
-    //   return;
-    // }
     refetch();
   };
 
@@ -96,28 +88,19 @@ const GameFinder = () => {
         </p>
       </div>
 
-      {/* Quick Search */}
+      {/* Filters */}
       <Card className="border-primary/20">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Search className="h-5 w-5" />
-            Search Games
+            <Filter className="h-5 w-5" />
+            Game Filters
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex gap-2">
-            <Input
-              placeholder="Search by game name..."
-              value={filters.searchTerm}
-              onChange={(e) => handleFilterChange("searchTerm", e.target.value)}
-              className="flex-1"
-            />
+          <div className="flex gap-2 mb-4">
             <Button onClick={() => setShowFilters(!showFilters)} variant="outline">
               <Filter className="h-4 w-4 mr-2" />
-              Filters
-            </Button>
-            <Button onClick={searchGames} className="bg-gradient-to-r from-blue-600 to-purple-600">
-              Search
+              {showFilters ? 'Hide' : 'Show'} Filters
             </Button>
           </div>
 
@@ -248,11 +231,15 @@ const GameFinder = () => {
                 </div>
               </div>
 
-              {/* Reset Button */}
-              <div className="md:col-span-2 lg:col-span-3 flex justify-end">
+              {/* Action Buttons */}
+              <div className="md:col-span-2 lg:col-span-3 flex justify-end gap-2">
                 <Button variant="outline" onClick={resetFilters}>
                   <RotateCcw className="h-4 w-4 mr-2" />
                   Reset Filters
+                </Button>
+                <Button onClick={searchGames} className="bg-gradient-to-r from-blue-600 to-purple-600">
+                  <Search className="h-4 w-4 mr-2" />
+                  Search Games
                 </Button>
               </div>
             </div>
