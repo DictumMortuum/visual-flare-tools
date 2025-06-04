@@ -19,7 +19,7 @@ const Timer = () => {
   const [currentRound, setCurrentRound] = useState(1);
   const [hidePlayerTimes, setHidePlayerTimes] = useState(false);
   const [showStatistics, setShowStatistics] = useState(false);
-  
+
   const intervalRef = useRef(null);
 
   // Initialize players when game starts
@@ -38,7 +38,7 @@ const Timer = () => {
     setCurrentRound(1);
     setIsRunning(true);
     setIsPaused(false);
-    setHidePlayerTimes(false);
+    setHidePlayerTimes(true);
     setShowStatistics(false);
   };
 
@@ -58,21 +58,23 @@ const Timer = () => {
     }
   };
 
+  console.log(hidePlayerTimes)
+
   // End game and show statistics
   const endGame = () => {
     // Add current time to current player's total
     setPlayers(prev => prev.map(player => {
       if (player.id === currentPlayer) {
-        return { 
-          ...player, 
-          totalTime: player.totalTime + currentTime, 
+        return {
+          ...player,
+          totalTime: player.totalTime + currentTime,
           turns: player.turns + 1,
-          isActive: false 
+          isActive: false
         };
       }
       return { ...player, isActive: false };
     }));
-    
+
     setIsRunning(false);
     setIsPaused(false);
     setShowStatistics(true);
@@ -88,15 +90,15 @@ const Timer = () => {
   // Switch to specific player (for clickable player boxes)
   const switchToPlayer = (playerId) => {
     if (isPaused || playerId === currentPlayer) return;
-    
+
     // Add current time to current player's total and increment their turns
     setPlayers(prev => prev.map(player => {
       if (player.id === currentPlayer) {
-        return { 
-          ...player, 
-          totalTime: player.totalTime + currentTime, 
+        return {
+          ...player,
+          totalTime: player.totalTime + currentTime,
           turns: player.turns + 1,
-          isActive: false 
+          isActive: false
         };
       } else if (player.id === playerId) {
         return { ...player, isActive: true };
@@ -104,7 +106,7 @@ const Timer = () => {
         return { ...player, isActive: false };
       }
     }));
-    
+
     setCurrentPlayer(playerId);
     setCurrentTime(0);
     setIsRunning(true);
@@ -114,15 +116,15 @@ const Timer = () => {
   // Move to next player (sequential)
   const nextPlayer = () => {
     const nextPlayerId = (currentPlayer + 1) % playerCount;
-    
+
     // Add current time to current player's total and increment their turns
     setPlayers(prev => prev.map(player => {
       if (player.id === currentPlayer) {
-        return { 
-          ...player, 
-          totalTime: player.totalTime + currentTime, 
+        return {
+          ...player,
+          totalTime: player.totalTime + currentTime,
           turns: player.turns + 1,
-          isActive: false 
+          isActive: false
         };
       } else if (player.id === nextPlayerId) {
         return { ...player, isActive: true };
@@ -130,12 +132,12 @@ const Timer = () => {
         return { ...player, isActive: false };
       }
     }));
-    
+
     // Check if we completed a round (back to player 0)
     if (nextPlayerId === 0 && currentPlayer === playerCount - 1) {
       setCurrentRound(prev => prev + 1);
     }
-    
+
     setCurrentPlayer(nextPlayerId);
     setCurrentTime(0);
     setIsRunning(true);
@@ -170,7 +172,7 @@ const Timer = () => {
 
   if (showStatistics) {
     return (
-      <GameStatistics 
+      <GameStatistics
         players={players}
         currentRound={currentRound}
         onBack={() => setShowStatistics(false)}
@@ -250,8 +252,8 @@ const Timer = () => {
 
           {/* Control Buttons */}
           <div className="flex justify-center gap-2 flex-wrap">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               size="lg"
               onClick={togglePause}
               disabled={!isRunning && !isPaused}
@@ -269,7 +271,7 @@ const Timer = () => {
               )}
             </Button>
 
-            <Button 
+            <Button
               size="lg"
               onClick={nextPlayer}
               disabled={isPaused}
@@ -279,7 +281,7 @@ const Timer = () => {
               Next Player
             </Button>
 
-            <Button 
+            <Button
               variant="outline"
               size="lg"
               onClick={() => setHidePlayerTimes(!hidePlayerTimes)}
@@ -297,7 +299,7 @@ const Timer = () => {
               )}
             </Button>
 
-            <Button 
+            <Button
               variant="secondary"
               size="lg"
               onClick={endGame}
@@ -306,8 +308,8 @@ const Timer = () => {
               End Game
             </Button>
 
-            <Button 
-              variant="destructive" 
+            <Button
+              variant="destructive"
               size="lg"
               onClick={resetGame}
             >
@@ -335,8 +337,8 @@ const Timer = () => {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {players.map((player) => (
-              <Card 
-                key={player.id} 
+              <Card
+                key={player.id}
                 className={`cursor-pointer transition-all hover:shadow-md ${
                   player.isActive ? 'ring-2 ring-primary bg-primary/5' : 'hover:bg-muted/50'
                 } ${isPaused ? 'cursor-not-allowed opacity-50' : ''}`}
@@ -345,12 +347,9 @@ const Timer = () => {
                 <CardContent className="pt-4">
                   <div className="text-center space-y-2">
                     <h3 className="font-semibold">{player.name}</h3>
-                    <div className="text-2xl font-mono font-bold">
-                      {hidePlayerTimes ? 
-                        formatTime(player.isActive ? currentTime : 0) : 
-                        formatTime(player.totalTime + (player.isActive ? currentTime : 0))
-                      }
-                    </div>
+                    {!hidePlayerTimes && <div className="text-2xl font-mono font-bold">
+                      {formatTime(player.totalTime + (player.isActive ? currentTime : 0))}
+                    </div>}
                     <div className="text-sm text-muted-foreground">
                       {player.turns} turn{player.turns !== 1 ? 's' : ''}
                     </div>
