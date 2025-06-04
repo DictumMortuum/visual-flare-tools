@@ -4,8 +4,8 @@ import React, { useState } from 'react';
 import { toast } from 'sonner';
 import {
   Mail,
-  Github,
-  Facebook,
+  // Github,
+  // Facebook,
   EyeIcon,
   EyeOffIcon
 } from 'lucide-react';
@@ -27,6 +27,12 @@ const Login = () => {
   const handleEmailLogin = (e) => {
     e.preventDefault();
     setIsLoading(true);
+
+    if (email === "") {
+      toast.error("Please provide an email")
+      setIsLoading(false);
+      return
+    }
 
     dispatch({ type: "user::set", user: {
       email: email,
@@ -68,7 +74,7 @@ const Login = () => {
                 <label className="text-sm font-medium leading-none" htmlFor="password">
                   Password
                 </label>
-                <button
+                {/* <button
                   type="button"
                   className="text-sm text-primary hover:underline"
                   onClick={() => loginWithRedirect({
@@ -78,7 +84,7 @@ const Login = () => {
                   })}
                 >
                   Forgot password?
-                </button>
+                </button> */}
               </div>
               <div className="relative">
                 <Input

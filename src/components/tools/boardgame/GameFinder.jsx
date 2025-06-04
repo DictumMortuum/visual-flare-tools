@@ -11,32 +11,52 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Search, Star, Users, Calendar, Filter, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 
+const ratingFilter = (min, max) => d => {
+  const avg = parseFloat(d.average.replace("\"", ""));
+  return min <= avg && max >= avg
+}
+
+const playersFilter = (min, best) => d => {
+  if (best) {
+    return d.best_min_players <= min && d.best_max_players >= min
+  } else {
+    return d.best_min_players <= min && d.best_max_players >= min
+  }
+}
+
 const GameFinder = () => {
   const [filters, setFilters] = useState({
-    minPlayers: 1,
+    minPlayers: 3,
     maxPlayers: 8,
-    minYear: 1900,
+    minYear: 2000,
     maxYear: new Date().getFullYear(),
-    minRating: 0,
+    minRating: 7,
     maxRating: 10,
     cooperative: false,
     solitaire: false,
     searchTerm: ""
   });
 
-  const [showFilters, setShowFilters] = useState(false);
+  const [showFilters, setShowFilters] = useState(true);
 
-  // This will be updated when the user provides the HTTP request
   const fetchGames = async () => {
-    // Placeholder - will be replaced with actual HTTP request
-    return [];
+    const rs = await fetch(`${import.meta.env.VITE_APP_ENDPOINT}/boardgames/top`, {
+      method: "POST",
+    });
+    return rs.json();
   };
 
-  const { data: games = [], isLoading, refetch } = useQuery({
-    queryKey: ["game-finder", filters],
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ["game-finder"],
     queryFn: fetchGames,
-    enabled: false // Will enable when user provides the HTTP request
+    initialData: {
+      options: []
+    },
   });
+
+  const games = data.options
+    .filter(ratingFilter(filters.minRating, filters.maxRating))
+    .filter(playersFilter(filters.minPlayers, true))
 
   const handleFilterChange = (key, value) => {
     setFilters(prev => ({ ...prev, [key]: value }));
@@ -44,11 +64,11 @@ const GameFinder = () => {
 
   const resetFilters = () => {
     setFilters({
-      minPlayers: 1,
+      minPlayers: 3,
       maxPlayers: 8,
-      minYear: 1900,
+      minYear: 2000,
       maxYear: new Date().getFullYear(),
-      minRating: 0,
+      minRating: 7,
       maxRating: 10,
       cooperative: false,
       solitaire: false,
@@ -57,10 +77,10 @@ const GameFinder = () => {
   };
 
   const searchGames = () => {
-    if (!filters.searchTerm && filters.minPlayers === 1 && filters.maxPlayers === 8) {
-      toast.error("Please set some search criteria to find games");
-      return;
-    }
+    // if (!filters.searchTerm && filters.minPlayers === 1 && filters.maxPlayers === 8) {
+    //   toast.error("Please set some search criteria to find games");
+    //   return;
+    // }
     refetch();
   };
 
@@ -276,11 +296,11 @@ const GameFinder = () => {
                   <div className="flex items-center justify-between text-sm">
                     <span className="flex items-center gap-1">
                       <Users className="h-4 w-4" />
-                      {game.minplayers}-{game.maxplayers} players
+                      {game.min_players}-{game.max_players} players
                     </span>
                     <span className="flex items-center gap-1">
                       <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                      {game.rating?.toFixed(1)}
+                      {game.average}
                     </span>
                   </div>
                   <div className="flex gap-2">
