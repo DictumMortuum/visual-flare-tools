@@ -51,7 +51,11 @@ const GameFinder = () => {
     queryKey: ["game-finder"],
     queryFn: fetchGames,
     initialData: {
-      options: []
+      options: [],
+      mechanics: [],
+      categories: [],
+      subdomains: [],
+      families: []
     },
   });
 
@@ -246,7 +250,11 @@ const GameFinder = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="">All Mechanics</SelectItem>
-                    {/* Mechanics options will be populated from query */}
+                    {data.mechanics && data.mechanics.map((mechanic, index) => (
+                      <SelectItem key={index} value={mechanic}>
+                        {mechanic}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -263,7 +271,11 @@ const GameFinder = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="">All Categories</SelectItem>
-                    {/* Categories options will be populated from query */}
+                    {data.categories && data.categories.map((category, index) => (
+                      <SelectItem key={index} value={category}>
+                        {category}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -280,7 +292,11 @@ const GameFinder = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="">All Subdomains</SelectItem>
-                    {/* Subdomains options will be populated from query */}
+                    {data.subdomains && data.subdomains.map((subdomain, index) => (
+                      <SelectItem key={index} value={subdomain}>
+                        {subdomain}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -297,7 +313,11 @@ const GameFinder = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="">All Families</SelectItem>
-                    {/* Families options will be populated from query */}
+                    {data.families && data.families.map((family, index) => (
+                      <SelectItem key={index} value={family}>
+                        {family}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
