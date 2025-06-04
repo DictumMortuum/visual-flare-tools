@@ -15,6 +15,7 @@ const Timer = () => {
   const [players, setPlayers] = useState([]);
   const [gameStarted, setGameStarted] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+  const [currentRound, setCurrentRound] = useState(1);
   
   const intervalRef = useRef(null);
 
@@ -24,12 +25,14 @@ const Timer = () => {
       id: i,
       name: `Player ${i + 1}`,
       totalTime: 0,
+      turns: 0,
       isActive: i === 0
     }));
     setPlayers(newPlayers);
     setGameStarted(true);
     setCurrentPlayer(0);
     setCurrentTime(0);
+    setCurrentRound(1);
     setIsRunning(true);
     setIsPaused(false);
   };
@@ -41,6 +44,7 @@ const Timer = () => {
     setIsPaused(false);
     setCurrentPlayer(0);
     setCurrentTime(0);
+    setCurrentRound(1);
     setPlayers([]);
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
@@ -49,21 +53,63 @@ const Timer = () => {
 
   // Toggle pause/resume
   const togglePause = () => {
-    setIsPaused(!isPaused);
-    setIsRunning(!isPaused);
+    const newPausedState = !isPaused;
+    setIsPaused(newPausedState);
+    setIsRunning(!newPausedState);
   };
 
-  // Move to next player
-  const nextPlayer = () => {
-    // Add current time to current player's total
-    setPlayers(prev => prev.map(player => 
-      player.id === currentPlayer 
-        ? { ...player, totalTime: player.totalTime + currentTime, isActive: false }
-        : { ...player, isActive: player.id === (currentPlayer + 1) % playerCount }
-    ));
+  // Switch to specific player (for clickable player boxes)
+  const switchToPlayer = (playerId) => {
+    if (isPaused || playerId === currentPlayer) return;
     
-    // Move to next player
-    setCurrentPlayer((prev) => (prev + 1) % playerCount);
+    // Add current time to current player's total and increment their turns
+    setPlayers(prev => prev.map(player => {
+      if (player.id === currentPlayer) {
+        return { 
+          ...player, 
+          totalTime: player.totalTime + currentTime, 
+          turns: player.turns + 1,
+          isActive: false 
+        };
+      } else if (player.id === playerId) {
+        return { ...player, isActive: true };
+      } else {
+        return { ...player, isActive: false };
+      }
+    }));
+    
+    setCurrentPlayer(playerId);
+    setCurrentTime(0);
+    setIsRunning(true);
+    setIsPaused(false);
+  };
+
+  // Move to next player (sequential)
+  const nextPlayer = () => {
+    const nextPlayerId = (currentPlayer + 1) % playerCount;
+    
+    // Add current time to current player's total and increment their turns
+    setPlayers(prev => prev.map(player => {
+      if (player.id === currentPlayer) {
+        return { 
+          ...player, 
+          totalTime: player.totalTime + currentTime, 
+          turns: player.turns + 1,
+          isActive: false 
+        };
+      } else if (player.id === nextPlayerId) {
+        return { ...player, isActive: true };
+      } else {
+        return { ...player, isActive: false };
+      }
+    }));
+    
+    // Check if we completed a round (back to player 0)
+    if (nextPlayerId === 0 && currentPlayer === playerCount - 1) {
+      setCurrentRound(prev => prev + 1);
+    }
+    
+    setCurrentPlayer(nextPlayerId);
     setCurrentTime(0);
     setIsRunning(true);
     setIsPaused(false);
@@ -144,6 +190,13 @@ const Timer = () => {
 
   return (
     <div className="space-y-6">
+      {/* Game Status */}
+      <div className="text-center">
+        <Badge variant="outline" className="text-lg px-4 py-2">
+          Round {currentRound}
+        </Badge>
+      </div>
+
       {/* Current Player Display */}
       <Card className="border-primary/20">
         <CardHeader className="text-center">
@@ -211,19 +264,28 @@ const Timer = () => {
       <Card>
         <CardHeader>
           <CardTitle>Player Statistics</CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Click on any player to switch to them
+          </p>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {players.map((player) => (
               <Card 
                 key={player.id} 
-                className={`${player.isActive ? 'ring-2 ring-primary bg-primary/5' : ''}`}
+                className={`cursor-pointer transition-all hover:shadow-md ${
+                  player.isActive ? 'ring-2 ring-primary bg-primary/5' : 'hover:bg-muted/50'
+                } ${isPaused ? 'cursor-not-allowed opacity-50' : ''}`}
+                onClick={() => switchToPlayer(player.id)}
               >
                 <CardContent className="pt-4">
                   <div className="text-center space-y-2">
                     <h3 className="font-semibold">{player.name}</h3>
                     <div className="text-2xl font-mono font-bold">
                       {formatTime(player.totalTime + (player.isActive ? currentTime : 0))}
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      {player.turns} turn{player.turns !== 1 ? 's' : ''}
                     </div>
                     {player.isActive && (
                       <Badge className="bg-green-100 text-green-800">
