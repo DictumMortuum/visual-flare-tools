@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,7 @@ import BoardGameTables from "@/components/tools/boardgame/BoardGameTables";
 import GameFinder from "@/components/tools/boardgame/GameFinder";
 import Wishlist from "@/components/tools/general/Wishlist";
 import Timer from "@/components/tools/boardgame/Timer";
+import LFG from "@/components/tools/boardgame/LFG";
 import { useNavigate } from 'react-router-dom';
 
 const ToolPage = () => {
@@ -84,6 +86,8 @@ const ToolPage = () => {
         return <GameFinder />;
       case 'timer':
         return <Timer />;
+      case 'lfg':
+        return <LFG />;
       case 'wishlist':
         return <Wishlist email={user.email} />;
       default:
