@@ -321,6 +321,7 @@ const JoinButton = ({ table, email }) => {
 }
 
 const Table = ({ table, email }) => {
+  const navigate = useNavigate();
   const participants = table.participants.map(d => d.name);
   const participant = table.participants.filter(d => d.name === email);
   const isHost = table.creator === email;
@@ -328,6 +329,12 @@ const Table = ({ table, email }) => {
   const isFull = table.participants.length >= table.seats;
   const isTeaching = table.teaching === true
   const [open, setOpen] = React.useState("");
+
+  useEffect(() => {
+    if (email === null) {
+      navigate("/login");
+    }
+  }, [email, navigate]);
 
   return (
     <Card className="group overflow-hidden border hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-card/50 backdrop-blur-sm flex flex-col h-full">
