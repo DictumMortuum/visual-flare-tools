@@ -14,6 +14,7 @@ import GameFinder from "@/components/tools/boardgame/GameFinder";
 import Wishlist from "@/components/tools/general/Wishlist";
 import Timer from "@/components/tools/boardgame/Timer";
 import LFG from "@/components/tools/boardgame/LFG";
+import PlayerProfile from "@/components/tools/boardgame/PlayerProfile";
 import { useNavigate } from 'react-router-dom';
 
 const ToolPage = () => {
@@ -88,6 +89,8 @@ const ToolPage = () => {
         return <Timer />;
       case 'lfg':
         return <LFG />;
+      case 'player-profile':
+        return <PlayerProfile />;
       case 'wishlist':
         return <Wishlist email={user.email} />;
       default:

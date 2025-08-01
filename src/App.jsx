@@ -9,7 +9,6 @@ import Layout from "./components/layout/Layout.jsx";
 import Index from "./pages/Index.jsx";
 import About from "./pages/About";
 import ToolPage from "./pages/ToolPage.jsx";
-import PlayerProfile from "./pages/PlayerProfile.jsx";
 import NotFound from "./pages/NotFound.jsx";
 import Login from "./components/auth/Login.jsx";
 import { WishlistRouter } from "@/components/tools/general/Wishlist";
@@ -31,7 +30,6 @@ const App = () => (
                 <Route element={<Layout />}>
                   <Route path="/" element={<Index />} />
                   <Route path="/about" element={<About />} />
-                  <Route path="/player" element={<PlayerProfile />} />
                   <Route path="/tools/:id" element={<ToolPage />} />
                   <Route path="/wishlist/:email" element={<WishlistRouter />} />
                   <Route path="/table/:id" element={<TableRouter />} />

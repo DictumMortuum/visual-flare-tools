@@ -24,12 +24,6 @@ const Header = ({ email, dispatch }) => {
               Home
             </Link>
             <Link
-              to="/player"
-              className="transition-colors hover:text-foreground/80"
-            >
-              Player
-            </Link>
-            <Link
               to="/about"
               className="transition-colors hover:text-foreground/80"
             >
