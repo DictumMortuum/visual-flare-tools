@@ -5,7 +5,8 @@ import {
   Search,
   Timer,
   Users,
-  User
+  User,
+  Trophy
 } from "lucide-react";
 
 export const toolsList = [
@@ -43,6 +44,13 @@ export const toolsList = [
     description: "Find groups of players who want to meet and play board games you like",
     category: "boardgames",
     icon: <Users className="h-5 w-5" />,
+  },
+  {
+    id: "eurovision-nomination",
+    title: "Eurovision Nomination",
+    description: "Nominate your favorite games for the Eurovision Boardgame Competition",
+    category: "boardgames",
+    icon: <Trophy className="h-5 w-5" />,
   },
   {
     id: "wishlist",
