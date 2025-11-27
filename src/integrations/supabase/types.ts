@@ -14,7 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      eurovision_nominations: {
+        Row: {
+          category: string
+          created_at: string | null
+          game_id: string
+          game_image: string | null
+          game_name: string
+          game_year: number | null
+          id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          game_id: string
+          game_image?: string | null
+          game_name: string
+          game_year?: number | null
+          id?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          game_id?: string
+          game_image?: string | null
+          game_name?: string
+          game_year?: number | null
+          id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
