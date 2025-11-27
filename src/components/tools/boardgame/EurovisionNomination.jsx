@@ -2,14 +2,14 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Trophy, Search, Plus, GripVertical, X } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { useQuery } from '@tanstack/react-query';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Trophy, Search, X } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDebounce } from '@uidotdev/usehooks';
-import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
-import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import SupabaseAuth from '@/components/auth/SupabaseAuth';
 
 const SearchGames = ({ onSelectGame, selectedGame }) => {
   const [input, setInput] = useState("");
@@ -77,259 +77,289 @@ const SearchGames = ({ onSelectGame, selectedGame }) => {
   );
 };
 
-const SortableGameItem = ({ game, onRemove }) => {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-  } = useSortable({ id: game.id });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  };
-
-  return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className="flex items-center gap-3 p-3 bg-card border rounded-lg shadow-sm hover:shadow-md transition-shadow"
-    >
-      <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing">
-        <GripVertical className="h-5 w-5 text-muted-foreground" />
-      </div>
-      {game.square200 ? (
-        <img
-          src={game.square200}
-          alt={game.name}
-          className="w-12 h-12 rounded-md object-cover"
-        />
-      ) : (
-        <div className="w-12 h-12 rounded-md bg-muted flex items-center justify-center">
-          <Trophy className="h-6 w-6 text-muted-foreground/30" />
-        </div>
-      )}
-      <div className="flex-1">
-        <p className="font-medium">{game.name}</p>
-        <p className="text-xs text-muted-foreground">
-          BGG ID: {game.id}
-          {game.year !== 0 && ` • ${game.year}`}
-        </p>
-      </div>
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={onRemove}
-      >
-        <X className="h-4 w-4" />
-      </Button>
-    </div>
-  );
-};
-
 const EurovisionNomination = () => {
-  const { toast } = useToast();
-  const [showDialog, setShowDialog] = useState(false);
+  const queryClient = useQueryClient();
+  const [activeTab, setActiveTab] = useState('nominate');
+  const [isAddGameDialogOpen, setIsAddGameDialogOpen] = useState(false);
   const [currentCategory, setCurrentCategory] = useState(null);
-  const [rankings, setRankings] = useState({
-    partyGame: [],
-    midWeight: [],
-    heavyWeight: []
+  const [user, setUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
+
+  // Check authentication status
+  React.useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      setAuthLoading(false);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Fetch my nominations
+  const { data: myNominations = [], isLoading: nominationsLoading } = useQuery({
+    queryKey: ['my-nominations', user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      
+      const { data, error } = await supabase
+        .from('eurovision_nominations')
+        .select('*')
+        .eq('user_id', user.id);
+      
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user,
   });
 
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
+  // Fetch all other nominations for voting
+  const { data: othersNominations = [], isLoading: othersLoading } = useQuery({
+    queryKey: ['others-nominations', user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('eurovision_nominations')
+        .select('*');
+      
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user && activeTab === 'vote',
+  });
 
-  const handleDragEnd = (event, category) => {
-    const { active, over } = event;
+  // Mutation to save/update nomination
+  const saveNominationMutation = useMutation({
+    mutationFn: async ({ category, game }) => {
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (!authUser) throw new Error('Not authenticated');
 
-    if (active.id !== over.id) {
-      setRankings((prev) => {
-        const items = prev[category];
-        const oldIndex = items.findIndex((item) => item.id === active.id);
-        const newIndex = items.findIndex((item) => item.id === over.id);
+      const { error } = await supabase
+        .from('eurovision_nominations')
+        .upsert({
+          user_id: authUser.id,
+          category,
+          game_id: game.id,
+          game_name: game.name,
+          game_year: game.year,
+          game_image: game.square200,
+        }, { onConflict: 'user_id,category' });
 
-        return {
-          ...prev,
-          [category]: arrayMove(items, oldIndex, newIndex)
-        };
-      });
-    }
-  };
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['my-nominations']);
+      queryClient.invalidateQueries(['others-nominations']);
+      toast.success('Nomination saved!');
+    },
+    onError: (error) => {
+      toast.error('Failed to save nomination: ' + error.message);
+    },
+  });
 
   const handleGameSelect = (game) => {
     if (!currentCategory) return;
 
-    setRankings(prev => ({
-      ...prev,
-      [currentCategory]: [...prev[currentCategory], game]
-    }));
-
-    toast({
-      title: "Game added!",
-      description: `${game.name} has been added to your ranking.`,
-    });
+    saveNominationMutation.mutate({ category: currentCategory, game });
+    setIsAddGameDialogOpen(false);
   };
 
-  const handleRemoveGame = (category, gameId) => {
-    setRankings(prev => ({
-      ...prev,
-      [category]: prev[category].filter(game => game.id !== gameId)
-    }));
-  };
+  const handleRemoveNomination = async (category) => {
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    if (!authUser) return;
 
-  const handleSubmit = () => {
-    const filledRankings = Object.entries(rankings)
-      .filter(([_, value]) => value.length > 0)
-      .map(([key, value]) => {
-        const categoryNames = {
-          partyGame: 'Party Game',
-          midWeight: 'Mid Weight',
-          heavyWeight: 'Heavy Weight'
-        };
-        return `${categoryNames[key]}: ${value.map((g, i) => `${i + 1}. ${g.name}`).join(', ')}`;
-      });
+    const { error } = await supabase
+      .from('eurovision_nominations')
+      .delete()
+      .eq('user_id', authUser.id)
+      .eq('category', category);
 
-    if (filledRankings.length === 0) {
-      toast({
-        title: "No rankings",
-        description: "Please rank at least one category.",
-        variant: "destructive"
-      });
-      return;
+    if (error) {
+      toast.error('Failed to remove nomination');
+    } else {
+      queryClient.invalidateQueries(['my-nominations']);
+      queryClient.invalidateQueries(['others-nominations']);
+      toast.success('Nomination removed');
     }
-
-    toast({
-      title: "Vote submitted!",
-      description: `You voted in ${filledRankings.length} ${filledRankings.length === 1 ? 'category' : 'categories'}.`,
-    });
-
-    // TODO: Send rankings to backend
-    console.log('Rankings:', rankings);
-  };
-
-  const handleReset = () => {
-    setRankings({
-      partyGame: [],
-      midWeight: [],
-      heavyWeight: []
-    });
   };
 
   const openAddGameDialog = (category) => {
     setCurrentCategory(category);
-    setShowDialog(true);
+    setIsAddGameDialogOpen(true);
   };
 
-  const categories = [
-    { key: 'partyGame', title: 'Party Game', description: 'Light, fun game perfect for parties and social gatherings' },
-    { key: 'midWeight', title: 'Mid Weight', description: 'Medium complexity game with strategic depth' },
-    { key: 'heavyWeight', title: 'Heavy Weight', description: 'Complex, strategic game for experienced players' }
-  ];
+  const categories = {
+    partyGame: 'Party Game',
+    midWeight: 'Mid Weight',
+    heavyWeight: 'Heavy Weight',
+  };
+
+  if (authLoading || nominationsLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <p>Loading...</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <SupabaseAuth />;
+  }
+
+  const myNominationsByCategory = {
+    partyGame: myNominations.find(n => n.category === 'partyGame'),
+    midWeight: myNominations.find(n => n.category === 'midWeight'),
+    heavyWeight: myNominations.find(n => n.category === 'heavyWeight'),
+  };
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto">
+    <div className="space-y-6 max-w-7xl mx-auto">
       {/* Header Section */}
       <div className="text-center space-y-4">
         <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full text-primary text-sm font-medium">
           <Trophy className="h-4 w-4" />
           Eurovision Boardgame Competition
         </div>
-        <h1 className="text-4xl font-bold tracking-tight">Rank Your Favorites</h1>
+        <h1 className="text-4xl font-bold tracking-tight">Eurovision Nomination</h1>
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-          Drag and drop games to rank them in each category. Save your rankings to vote!
+          Nominate your favorite games and vote on others' nominations
         </p>
       </div>
 
-      {/* Category Lists */}
-      <div className="grid gap-8 md:grid-cols-3">
-        {categories.map(({ key, title, description }) => (
-          <Card key={key} className="flex flex-col">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Trophy className="h-5 w-5 text-primary" />
-                {title}
-              </CardTitle>
-              <CardDescription>{description}</CardDescription>
-            </CardHeader>
-            <CardContent className="flex-1 space-y-4">
-              <DndContext
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                onDragEnd={(event) => handleDragEnd(event, key)}
-              >
-                <SortableContext
-                  items={rankings[key].map(g => g.id)}
-                  strategy={verticalListSortingStrategy}
-                >
-                  <div className="space-y-2 min-h-[200px]">
-                    {rankings[key].length === 0 ? (
-                      <div className="flex items-center justify-center h-[200px] border-2 border-dashed rounded-lg text-muted-foreground">
-                        <p className="text-sm">No games ranked yet</p>
+      <Card>
+        <CardContent className="pt-6">
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="nominate">My Nominations</TabsTrigger>
+              <TabsTrigger value="vote">Vote</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="nominate" className="space-y-6 mt-6">
+              {Object.entries(categories).map(([key, title]) => {
+                const nomination = myNominationsByCategory[key];
+                return (
+                  <div key={key} className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-lg font-semibold flex items-center gap-2">
+                          <Trophy className="h-5 w-5 text-primary" />
+                          {title}
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          Nominate one game for this category
+                        </p>
                       </div>
+                      {!nomination && (
+                        <Button
+                          variant="outline"
+                          onClick={() => openAddGameDialog(key)}
+                        >
+                          Nominate Game
+                        </Button>
+                      )}
+                    </div>
+
+                    {nomination ? (
+                      <Card>
+                        <CardContent className="flex items-center gap-4 p-4">
+                          <img
+                            src={nomination.game_image || '/placeholder.svg'}
+                            alt={nomination.game_name}
+                            className="w-20 h-20 object-cover rounded"
+                          />
+                          <div className="flex-1">
+                            <h4 className="font-semibold">{nomination.game_name}</h4>
+                            <p className="text-sm text-muted-foreground">
+                              {nomination.game_year}
+                            </p>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleRemoveNomination(key)}
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </CardContent>
+                      </Card>
                     ) : (
-                      rankings[key].map((game) => (
-                        <SortableGameItem
-                          key={game.id}
-                          game={game}
-                          onRemove={() => handleRemoveGame(key, game.id)}
-                        />
-                      ))
+                      <div className="text-center py-8 text-muted-foreground border-2 border-dashed rounded-lg">
+                        No game nominated yet. Click "Nominate Game" to select one.
+                      </div>
                     )}
                   </div>
-                </SortableContext>
-              </DndContext>
+                );
+              })}
+            </TabsContent>
 
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => openAddGameDialog(key)}
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Add Game
-              </Button>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {/* Submit Section */}
-      <div className="flex justify-center gap-3">
-        <Button variant="outline" onClick={handleReset} size="lg">
-          Clear All
-        </Button>
-        <Button 
-          onClick={handleSubmit} 
-          size="lg"
-          className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg"
-        >
-          <Trophy className="mr-2 h-5 w-5" />
-          Submit Vote
-        </Button>
-      </div>
+            <TabsContent value="vote" className="space-y-6 mt-6">
+              {othersLoading ? (
+                <p>Loading nominations...</p>
+              ) : othersNominations.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  No nominations from other players yet.
+                </div>
+              ) : (
+                Object.entries(categories).map(([key, title]) => {
+                  const categoryNominations = othersNominations.filter(
+                    n => n.category === key
+                  );
+                  
+                  return (
+                    <div key={key} className="space-y-4">
+                      <h3 className="text-lg font-semibold flex items-center gap-2">
+                        <Trophy className="h-5 w-5 text-primary" />
+                        {title}
+                      </h3>
+                      {categoryNominations.length === 0 ? (
+                        <div className="text-center py-8 text-muted-foreground border-2 border-dashed rounded-lg">
+                          No nominations for this category yet.
+                        </div>
+                      ) : (
+                        <div className="grid gap-4">
+                          {categoryNominations.map((nomination) => (
+                            <Card key={nomination.id}>
+                              <CardContent className="flex items-center gap-4 p-4">
+                                <img
+                                  src={nomination.game_image || '/placeholder.svg'}
+                                  alt={nomination.game_name}
+                                  className="w-20 h-20 object-cover rounded"
+                                />
+                                <div className="flex-1">
+                                  <h4 className="font-semibold">{nomination.game_name}</h4>
+                                  <p className="text-sm text-muted-foreground">
+                                    {nomination.game_year}
+                                  </p>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+              )}
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
 
       {/* Add Game Dialog */}
-      <Dialog open={showDialog} onOpenChange={setShowDialog}>
+      <Dialog open={isAddGameDialogOpen} onOpenChange={setIsAddGameDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Add Game to Ranking</DialogTitle>
+            <DialogTitle>Nominate a Game</DialogTitle>
             <DialogDescription>
-              Search and select a game to add to your ranking
+              Search and select a game for {categories[currentCategory]}
             </DialogDescription>
           </DialogHeader>
 
           <div className="py-4">
             <SearchGames 
-              onSelectGame={(game) => {
-                handleGameSelect(game);
-                setShowDialog(false);
-              }}
+              onSelectGame={handleGameSelect}
             />
           </div>
         </DialogContent>
