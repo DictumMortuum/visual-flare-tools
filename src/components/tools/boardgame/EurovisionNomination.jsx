@@ -7,7 +7,6 @@ import { Trophy, Search, X } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDebounce } from '@uidotdev/usehooks';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { UserContext } from '@/context';
 
@@ -90,13 +89,12 @@ const EurovisionNomination = () => {
     queryFn: async () => {
       if (!user?.user_id) return [];
       
-      const { data, error } = await supabase
-        .from('eurovision_nominations')
-        .select('*')
-        .eq('user_id', user.user_id);
+      const response = await fetch(
+        `${import.meta.env.VITE_APP_ENDPOINT}/rest/eurovision_nominations?filter={"user_id":"${user.user_id}"}`
+      );
       
-      if (error) throw error;
-      return data || [];
+      if (!response.ok) throw new Error('Failed to fetch nominations');
+      return response.json();
     },
     enabled: !!user?.user_id,
   });
@@ -105,12 +103,12 @@ const EurovisionNomination = () => {
   const { data: othersNominations = [], isLoading: othersLoading } = useQuery({
     queryKey: ['others-nominations', user?.user_id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('eurovision_nominations')
-        .select('*');
+      const response = await fetch(
+        `${import.meta.env.VITE_APP_ENDPOINT}/rest/eurovision_nominations`
+      );
       
-      if (error) throw error;
-      return data || [];
+      if (!response.ok) throw new Error('Failed to fetch nominations');
+      return response.json();
     },
     enabled: !!user?.user_id && activeTab === 'vote',
   });
@@ -120,18 +118,25 @@ const EurovisionNomination = () => {
     mutationFn: async ({ category, game }) => {
       if (!user?.user_id) throw new Error('Not authenticated');
 
-      const { error } = await supabase
-        .from('eurovision_nominations')
-        .upsert({
-          user_id: user.user_id,
-          category,
-          game_id: game.id,
-          game_name: game.name,
-          game_year: game.year,
-          game_image: game.square200,
-        }, { onConflict: 'user_id,category' });
+      const response = await fetch(
+        `${import.meta.env.VITE_APP_ENDPOINT}/rest/eurovision_nominations`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            user_id: user.user_id,
+            category,
+            game_id: game.id,
+            game_name: game.name,
+            game_year: game.year,
+            game_image: game.square200,
+          }),
+        }
+      );
 
-      if (error) throw error;
+      if (!response.ok) throw new Error('Failed to save nomination');
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['my-nominations']);
@@ -153,18 +158,21 @@ const EurovisionNomination = () => {
   const handleRemoveNomination = async (category) => {
     if (!user?.user_id) return;
 
-    const { error } = await supabase
-      .from('eurovision_nominations')
-      .delete()
-      .eq('user_id', user.user_id)
-      .eq('category', category);
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_APP_ENDPOINT}/rest/eurovision_nominations?filter={"user_id":"${user.user_id}","category":"${category}"}`,
+        {
+          method: 'DELETE',
+        }
+      );
 
-    if (error) {
-      toast.error('Failed to remove nomination');
-    } else {
+      if (!response.ok) throw new Error('Failed to remove nomination');
+
       queryClient.invalidateQueries(['my-nominations']);
       queryClient.invalidateQueries(['others-nominations']);
       toast.success('Nomination removed');
+    } catch (error) {
+      toast.error('Failed to remove nomination');
     }
   };
 
