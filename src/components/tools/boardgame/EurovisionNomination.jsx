@@ -162,6 +162,24 @@ const EurovisionNomination = () => {
     enabled: !!user?.user_id,
   });
 
+  const { status: myVotesStatus, data: myVotes = [], isLoading: votesLoading } = useQuery({
+    queryKey: ['my-votes', user?.user_id],
+    queryFn: async () => {
+      if (!user?.user_id) return [];
+      
+      const response = await fetch(
+        `${import.meta.env.VITE_API_ENDPOINT}/rest/eurovisionvotes/user/${user.user_id}`
+      );
+      
+      if (!response.ok) throw new Error('Failed to fetch votes');
+      return response.json();
+    },
+    onSuccess: () => {
+      setRankings(myVotes.votes)
+    },
+    enabled: !!user?.user_id,
+  });
+
   // Fetch all other nominations for voting
   const { data: othersNominations = [], isLoading: othersLoading } = useQuery({
     queryKey: ['others-nominations', user?.user_id],
@@ -259,31 +277,46 @@ const EurovisionNomination = () => {
     }
   };
 
-  const saveVotes = async () => {
-    if (!user?.user_id) return;
+  // Mutation to save/update nomination
+  const saveVotesMutation = useMutation({
+    mutationFn: async () => {
+      if (!user?.user_id) throw new Error('Not authenticated');
 
-    try {
-      // Save rankings to API
-      const votesData = Object.entries(rankings).flatMap(([category, items]) =>
-        items.map((item, index) => ({
-          user_id: user.user_id,
-          category,
-          nomination_id: item.id,
-          rank: index + 1,
-        }))
+      const response = await fetch(
+        `${import.meta.env.VITE_API_ENDPOINT}/rest/eurovisionvotes`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: user.user_id,
+            votes: rankings,
+          }),
+        }
       );
 
-      // You can implement the actual save logic here
-      console.log('Saving votes:', votesData);
-      toast.success('Votes saved successfully!');
-    } catch (error) {
-      toast.error('Failed to save votes');
-    }
+      if (!response.ok) throw new Error('Failed to save votes');
+    },
+    onSuccess: () => {
+      // queryClient.invalidateQueries(['my-nominations']);
+      // queryClient.invalidateQueries(['others-nominations']);
+      toast.success('Nomination saved!');
+    },
+    onError: (error) => {
+      toast.error('Failed to save votes: ' + error.message);
+    },
+  });
+
+  const handleSaveVotes = () => {
+    saveVotesMutation.mutate();
   };
 
-  // Initialize rankings when nominations load
   React.useEffect(() => {
-    if (othersNominations.length > 0 && activeTab === 'vote') {
+    console.log(votesLoading, myVotesStatus, myVotes, myVotes?.votes?.length)
+    if (myVotesStatus === 'success' && myVotes.id !== 0) {
+      setRankings(myVotes.votes);
+    } else if (othersNominations.length > 0 && activeTab === 'vote') {
       const newRankings = {
         partyGame: othersNominations.filter(n => n.category === 'partyGame'),
         midWeight: othersNominations.filter(n => n.category === 'midWeight'),
@@ -291,7 +324,23 @@ const EurovisionNomination = () => {
       };
       setRankings(newRankings);
     }
-  }, [othersNominations, activeTab]);
+  }, [votesLoading, myVotes, othersNominations, activeTab]);
+
+  // Initialize rankings when nominations load
+  // React.useEffect(() => {
+  //   console.log(myVotes?.votes)
+  //   if (myVotes?.votes?.length > 0) {
+  //     console.log("asdf")
+  //     setRankings(myVotes.votes);
+  //   } else if (othersNominations.length > 0 && activeTab === 'vote') {
+  //     const newRankings = {
+  //       partyGame: othersNominations.filter(n => n.category === 'partyGame'),
+  //       midWeight: othersNominations.filter(n => n.category === 'midWeight'),
+  //       heavyWeight: othersNominations.filter(n => n.category === 'heavyWeight'),
+  //     };
+  //     setRankings(newRankings);
+  //   }
+  // }, [othersNominations, myVotes, activeTab]);
 
   const categories = {
     partyGame: 'Party Game',
@@ -309,7 +358,7 @@ const EurovisionNomination = () => {
     );
   }
 
-  if (nominationsLoading) {
+  if (nominationsLoading || votesLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <p>Loading...</p>
@@ -416,12 +465,12 @@ const EurovisionNomination = () => {
                     <p className="text-sm text-muted-foreground">
                       Drag games to rank them. Your top choice should be at position 1.
                     </p>
-                    <Button onClick={saveVotes}>Save Votes</Button>
+                    <Button onClick={handleSaveVotes}>Save Votes</Button>
                   </div>
                   
                   {Object.entries(categories).map(([key, title]) => {
                     const categoryRankings = rankings[key] || [];
-                    
+
                     return (
                       <div key={key} className="space-y-4">
                         <h3 className="text-lg font-semibold flex items-center gap-2 sticky top-0 bg-background py-2 z-10">
