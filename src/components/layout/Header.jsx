@@ -1,7 +1,7 @@
 
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { LogOut } from "lucide-react";
+import { LogOut, LogIn } from "lucide-react";
 import ThemeToggle from "@/components/ui/theme-toggle";
 
 const Header = ({ email, dispatch }) => {
@@ -33,7 +33,7 @@ const Header = ({ email, dispatch }) => {
         </div>
         <div className="flex items-center gap-4">
           <ThemeToggle />
-          {email && (
+          {email ? (
             <div className="flex items-center gap-4">
               <span className="text-sm">Welcome, {email}</span>
               <Button
@@ -46,7 +46,18 @@ const Header = ({ email, dispatch }) => {
                 Logout
               </Button>
             </div>
-          )}
+          ) : (
+            <Button
+              variant="outline"
+              size="sm"
+              asChild
+              className="flex items-center gap-1"
+            >
+              <Link to="/login">
+                <LogIn className="h-4 w-4" />
+                Login
+              </Link>
+            </Button>)}
         </div>
       </div>
     </header>

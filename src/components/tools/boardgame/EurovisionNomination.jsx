@@ -17,7 +17,7 @@ const SearchGames = ({ onSelectGame, selectedGame }) => {
   const debouncedSearchTerm = useDebounce(searchQuery, 1000);
 
   const fetchBoardgames = async (name) => {
-    const rs = await fetch(`${import.meta.env.VITE_APP_ENDPOINT}/rest/boardgames?filter={"name@simplelike":"${name}"}&range=[0,9]`);
+    const rs = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/rest/boardgames?filter={"name@simplelike":"${name}"}&range=[0,9]`);
     setShowResults(true);
     return rs.json();
   }
@@ -90,7 +90,7 @@ const EurovisionNomination = () => {
       if (!user?.user_id) return [];
       
       const response = await fetch(
-        `${import.meta.env.VITE_APP_ENDPOINT}/rest/eurovision_nominations?filter={"user_id":"${user.user_id}"}`
+        `${import.meta.env.VITE_API_ENDPOINT}/rest/eurovisionparticipations?filter={"email":"${user.user_id}"}`
       );
       
       if (!response.ok) throw new Error('Failed to fetch nominations');
@@ -104,7 +104,7 @@ const EurovisionNomination = () => {
     queryKey: ['others-nominations', user?.user_id],
     queryFn: async () => {
       const response = await fetch(
-        `${import.meta.env.VITE_APP_ENDPOINT}/rest/eurovision_nominations`
+        `${import.meta.env.VITE_API_ENDPOINT}/rest/eurovisionparticipations`
       );
       
       if (!response.ok) throw new Error('Failed to fetch nominations');
@@ -119,7 +119,7 @@ const EurovisionNomination = () => {
       if (!user?.user_id) throw new Error('Not authenticated');
 
       const response = await fetch(
-        `${import.meta.env.VITE_APP_ENDPOINT}/rest/eurovision_nominations`,
+        `${import.meta.env.VITE_API_ENDPOINT}/rest/eurovisionparticipations`,
         {
           method: 'POST',
           headers: {
@@ -127,11 +127,9 @@ const EurovisionNomination = () => {
           },
           body: JSON.stringify({
             user_id: user.user_id,
+            email: user.user_id,
             category,
-            game_id: game.id,
-            game_name: game.name,
-            game_year: game.year,
-            game_image: game.square200,
+            boardgame_id: game.id,
           }),
         }
       );
@@ -155,12 +153,12 @@ const EurovisionNomination = () => {
     setIsAddGameDialogOpen(false);
   };
 
-  const handleRemoveNomination = async (category) => {
+  const handleRemoveNomination = async (id, category) => {
     if (!user?.user_id) return;
 
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_APP_ENDPOINT}/rest/eurovision_nominations?filter={"user_id":"${user.user_id}","category":"${category}"}`,
+        `${import.meta.env.VITE_API_ENDPOINT}/rest/eurovisionparticipations/${id}`,
         {
           method: 'DELETE',
         }
@@ -262,20 +260,20 @@ const EurovisionNomination = () => {
                       <Card>
                         <CardContent className="flex items-center gap-4 p-4">
                           <img
-                            src={nomination.game_image || '/placeholder.svg'}
-                            alt={nomination.game_name}
+                            src={nomination.boardgame.square200 || '/placeholder.svg'}
+                            alt={nomination.boardgame.name}
                             className="w-20 h-20 object-cover rounded"
                           />
                           <div className="flex-1">
-                            <h4 className="font-semibold">{nomination.game_name}</h4>
+                            <h4 className="font-semibold">{nomination.boardgame.name}</h4>
                             <p className="text-sm text-muted-foreground">
-                              {nomination.game_year}
+                              {nomination.boardgame.year}
                             </p>
                           </div>
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => handleRemoveNomination(key)}
+                            onClick={() => handleRemoveNomination(nomination.id, key)}
                           >
                             <X className="w-4 h-4" />
                           </Button>
@@ -320,14 +318,14 @@ const EurovisionNomination = () => {
                             <Card key={nomination.id}>
                               <CardContent className="flex items-center gap-4 p-4">
                                 <img
-                                  src={nomination.game_image || '/placeholder.svg'}
-                                  alt={nomination.game_name}
+                                  src={nomination.boardgame.square200 || '/placeholder.svg'}
+                                  alt={nomination.boardgame.name}
                                   className="w-20 h-20 object-cover rounded"
                                 />
                                 <div className="flex-1">
-                                  <h4 className="font-semibold">{nomination.game_name}</h4>
+                                  <h4 className="font-semibold">{nomination.boardgame.name}</h4>
                                   <p className="text-sm text-muted-foreground">
-                                    {nomination.game_year}
+                                    {nomination.boardgame.year}
                                   </p>
                                 </div>
                               </CardContent>

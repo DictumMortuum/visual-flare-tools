@@ -253,7 +253,7 @@ const PlayerProfile = () => {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {playerData?.games?.slice(0, 6).map((game, index) => (
+            {playerData?.played?.slice(0, 6).map((game, index) => (
               <Card key={index} className="p-4">
                 <div className="space-y-2">
                   <h4 className="font-medium">{game.name || `Game ${index + 1}`}</h4>
