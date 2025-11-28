@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDebounce } from '@uidotdev/usehooks';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import SupabaseAuth from '@/components/auth/SupabaseAuth';
+import { UserContext } from '@/context';
 
 const SearchGames = ({ onSelectGame, selectedGame }) => {
   const [input, setInput] = useState("");
@@ -79,46 +79,31 @@ const SearchGames = ({ onSelectGame, selectedGame }) => {
 
 const EurovisionNomination = () => {
   const queryClient = useQueryClient();
+  const { state: { user } } = useContext(UserContext);
   const [activeTab, setActiveTab] = useState('nominate');
   const [isAddGameDialogOpen, setIsAddGameDialogOpen] = useState(false);
   const [currentCategory, setCurrentCategory] = useState(null);
-  const [user, setUser] = useState(null);
-  const [authLoading, setAuthLoading] = useState(true);
-
-  // Check authentication status
-  React.useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      setAuthLoading(false);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
 
   // Fetch my nominations
   const { data: myNominations = [], isLoading: nominationsLoading } = useQuery({
-    queryKey: ['my-nominations', user?.id],
+    queryKey: ['my-nominations', user?.user_id],
     queryFn: async () => {
-      if (!user) return [];
+      if (!user?.user_id) return [];
       
       const { data, error } = await supabase
         .from('eurovision_nominations')
         .select('*')
-        .eq('user_id', user.id);
+        .eq('user_id', user.user_id);
       
       if (error) throw error;
       return data || [];
     },
-    enabled: !!user,
+    enabled: !!user?.user_id,
   });
 
   // Fetch all other nominations for voting
   const { data: othersNominations = [], isLoading: othersLoading } = useQuery({
-    queryKey: ['others-nominations', user?.id],
+    queryKey: ['others-nominations', user?.user_id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('eurovision_nominations')
@@ -127,19 +112,18 @@ const EurovisionNomination = () => {
       if (error) throw error;
       return data || [];
     },
-    enabled: !!user && activeTab === 'vote',
+    enabled: !!user?.user_id && activeTab === 'vote',
   });
 
   // Mutation to save/update nomination
   const saveNominationMutation = useMutation({
     mutationFn: async ({ category, game }) => {
-      const { data: { user: authUser } } = await supabase.auth.getUser();
-      if (!authUser) throw new Error('Not authenticated');
+      if (!user?.user_id) throw new Error('Not authenticated');
 
       const { error } = await supabase
         .from('eurovision_nominations')
         .upsert({
-          user_id: authUser.id,
+          user_id: user.user_id,
           category,
           game_id: game.id,
           game_name: game.name,
@@ -167,13 +151,12 @@ const EurovisionNomination = () => {
   };
 
   const handleRemoveNomination = async (category) => {
-    const { data: { user: authUser } } = await supabase.auth.getUser();
-    if (!authUser) return;
+    if (!user?.user_id) return;
 
     const { error } = await supabase
       .from('eurovision_nominations')
       .delete()
-      .eq('user_id', authUser.id)
+      .eq('user_id', user.user_id)
       .eq('category', category);
 
     if (error) {
@@ -196,16 +179,22 @@ const EurovisionNomination = () => {
     heavyWeight: 'Heavy Weight',
   };
 
-  if (authLoading || nominationsLoading) {
+  if (!user?.user_id) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <p className="text-lg text-muted-foreground">Please log in to access Eurovision Nomination.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (nominationsLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <p>Loading...</p>
       </div>
     );
-  }
-
-  if (!user) {
-    return <SupabaseAuth />;
   }
 
   const myNominationsByCategory = {
