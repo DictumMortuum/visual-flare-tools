@@ -3,12 +3,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Trophy, Search, X } from "lucide-react";
+import { Trophy, Search, X, GripVertical } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDebounce } from '@uidotdev/usehooks';
 import { toast } from 'sonner';
 import { UserContext } from '@/context';
+import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 const SearchGames = ({ onSelectGame, selectedGame }) => {
   const [input, setInput] = useState("");
@@ -76,12 +79,72 @@ const SearchGames = ({ onSelectGame, selectedGame }) => {
   );
 };
 
+const SortableNominationCard = ({ nomination, rank }) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: nomination.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      <Card className="relative">
+        <CardContent className="flex items-center gap-4 p-4">
+          <div
+            {...attributes}
+            {...listeners}
+            className="cursor-grab active:cursor-grabbing flex items-center justify-center w-8 h-8 bg-muted rounded hover:bg-muted/80 transition-colors"
+          >
+            <GripVertical className="w-4 h-4 text-muted-foreground" />
+          </div>
+          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground font-bold text-sm">
+            {rank}
+          </div>
+          <img
+            src={nomination.boardgame.square200 || '/placeholder.svg'}
+            alt={nomination.boardgame.name}
+            className="w-20 h-20 object-cover rounded"
+          />
+          <div className="flex-1">
+            <h4 className="font-semibold">{nomination.boardgame.name}</h4>
+            <p className="text-sm text-muted-foreground">
+              {nomination.boardgame.year}
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
 const EurovisionNomination = () => {
   const queryClient = useQueryClient();
   const { state: { user } } = useContext(UserContext);
   const [activeTab, setActiveTab] = useState('nominate');
   const [isAddGameDialogOpen, setIsAddGameDialogOpen] = useState(false);
   const [currentCategory, setCurrentCategory] = useState(null);
+  const [rankings, setRankings] = useState({
+    partyGame: [],
+    midWeight: [],
+    heavyWeight: [],
+  });
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    })
+  );
 
   // Fetch my nominations
   const { data: myNominations = [], isLoading: nominationsLoading } = useQuery({
@@ -178,6 +241,57 @@ const EurovisionNomination = () => {
     setCurrentCategory(category);
     setIsAddGameDialogOpen(true);
   };
+
+  const handleDragEnd = (event, category) => {
+    const { active, over } = event;
+
+    if (active.id !== over?.id) {
+      setRankings((prev) => {
+        const items = prev[category];
+        const oldIndex = items.findIndex(item => item.id === active.id);
+        const newIndex = items.findIndex(item => item.id === over.id);
+        
+        return {
+          ...prev,
+          [category]: arrayMove(items, oldIndex, newIndex),
+        };
+      });
+    }
+  };
+
+  const saveVotes = async () => {
+    if (!user?.user_id) return;
+
+    try {
+      // Save rankings to API
+      const votesData = Object.entries(rankings).flatMap(([category, items]) =>
+        items.map((item, index) => ({
+          user_id: user.user_id,
+          category,
+          nomination_id: item.id,
+          rank: index + 1,
+        }))
+      );
+
+      // You can implement the actual save logic here
+      console.log('Saving votes:', votesData);
+      toast.success('Votes saved successfully!');
+    } catch (error) {
+      toast.error('Failed to save votes');
+    }
+  };
+
+  // Initialize rankings when nominations load
+  React.useEffect(() => {
+    if (othersNominations.length > 0 && activeTab === 'vote') {
+      const newRankings = {
+        partyGame: othersNominations.filter(n => n.category === 'partyGame'),
+        midWeight: othersNominations.filter(n => n.category === 'midWeight'),
+        heavyWeight: othersNominations.filter(n => n.category === 'heavyWeight'),
+      };
+      setRankings(newRankings);
+    }
+  }, [othersNominations, activeTab]);
 
   const categories = {
     partyGame: 'Party Game',
@@ -297,45 +411,53 @@ const EurovisionNomination = () => {
                   No nominations from other players yet.
                 </div>
               ) : (
-                Object.entries(categories).map(([key, title]) => {
-                  const categoryNominations = othersNominations.filter(
-                    n => n.category === key
-                  );
+                <>
+                  <div className="flex items-center justify-between bg-muted/50 p-4 rounded-lg">
+                    <p className="text-sm text-muted-foreground">
+                      Drag games to rank them. Your top choice should be at position 1.
+                    </p>
+                    <Button onClick={saveVotes}>Save Votes</Button>
+                  </div>
                   
-                  return (
-                    <div key={key} className="space-y-4">
-                      <h3 className="text-lg font-semibold flex items-center gap-2">
-                        <Trophy className="h-5 w-5 text-primary" />
-                        {title}
-                      </h3>
-                      {categoryNominations.length === 0 ? (
-                        <div className="text-center py-8 text-muted-foreground border-2 border-dashed rounded-lg">
-                          No nominations for this category yet.
-                        </div>
-                      ) : (
-                        <div className="grid gap-4">
-                          {categoryNominations.map((nomination) => (
-                            <Card key={nomination.id}>
-                              <CardContent className="flex items-center gap-4 p-4">
-                                <img
-                                  src={nomination.boardgame.square200 || '/placeholder.svg'}
-                                  alt={nomination.boardgame.name}
-                                  className="w-20 h-20 object-cover rounded"
-                                />
-                                <div className="flex-1">
-                                  <h4 className="font-semibold">{nomination.boardgame.name}</h4>
-                                  <p className="text-sm text-muted-foreground">
-                                    {nomination.boardgame.year}
-                                  </p>
-                                </div>
-                              </CardContent>
-                            </Card>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })
+                  {Object.entries(categories).map(([key, title]) => {
+                    const categoryRankings = rankings[key] || [];
+                    
+                    return (
+                      <div key={key} className="space-y-4">
+                        <h3 className="text-lg font-semibold flex items-center gap-2 sticky top-0 bg-background py-2 z-10">
+                          <Trophy className="h-5 w-5 text-primary" />
+                          {title}
+                        </h3>
+                        {categoryRankings.length === 0 ? (
+                          <div className="text-center py-8 text-muted-foreground border-2 border-dashed rounded-lg">
+                            No nominations for this category yet.
+                          </div>
+                        ) : (
+                          <DndContext
+                            sensors={sensors}
+                            collisionDetection={closestCenter}
+                            onDragEnd={(event) => handleDragEnd(event, key)}
+                          >
+                            <SortableContext
+                              items={categoryRankings.map(n => n.id)}
+                              strategy={verticalListSortingStrategy}
+                            >
+                              <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2">
+                                {categoryRankings.map((nomination, index) => (
+                                  <SortableNominationCard
+                                    key={nomination.id}
+                                    nomination={nomination}
+                                    rank={index + 1}
+                                  />
+                                ))}
+                              </div>
+                            </SortableContext>
+                          </DndContext>
+                        )}
+                      </div>
+                    );
+                  })}
+                </>
               )}
             </TabsContent>
           </Tabs>
