@@ -96,13 +96,14 @@ const SortableNominationCard = ({ nomination, rank }) => {
   };
 
   return (
-    <div ref={setNodeRef} style={style}>
+    <div ref={setNodeRef} style={style} className="touch-none">
       <Card className="relative">
         <CardContent className="flex items-center gap-4 p-4">
           <div
             {...attributes}
             {...listeners}
-            className="cursor-grab active:cursor-grabbing flex items-center justify-center w-8 h-8 bg-muted rounded hover:bg-muted/80 transition-colors"
+            className="cursor-grab active:cursor-grabbing flex items-center justify-center w-8 h-8 bg-muted rounded hover:bg-muted/80 transition-colors touch-none"
+            style={{ touchAction: 'none' }}
           >
             <GripVertical className="w-4 h-4 text-muted-foreground" />
           </div>
@@ -146,8 +147,8 @@ const EurovisionNomination = () => {
     }),
     useSensor(TouchSensor, {
       activationConstraint: {
-        delay: 250,
-        tolerance: 5,
+        delay: 200,
+        tolerance: 8,
       },
     })
   );
