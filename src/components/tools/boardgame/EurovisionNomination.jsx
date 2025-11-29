@@ -111,30 +111,35 @@ const SortableNominationCard = ({ nomination, rank }) => {
       {...listeners}
     >
       <Card className="relative overflow-hidden cursor-grab active:cursor-grabbing hover:shadow-lg transition-all duration-200 border-2 hover:border-primary/20">
-        <CardContent className="flex items-center gap-4 p-4 bg-gradient-to-r from-background to-muted/10">
-          <div className="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary/70 text-primary-foreground font-bold text-lg shadow-md">
+        <CardContent className="flex items-center gap-3 p-2 bg-gradient-to-r from-background to-muted/10">
+          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-primary to-primary/70 text-primary-foreground font-bold text-sm shadow-md flex-shrink-0">
             {rank}
           </div>
-          <div className="relative group">
+          <div className="relative group flex-shrink-0">
             <img
               src={nomination.boardgame.square200 || '/placeholder.svg'}
               alt={nomination.boardgame.name}
-              className="w-24 h-24 object-cover rounded-lg shadow-md border-2 border-border group-hover:scale-105 transition-transform duration-200"
+              className="w-16 h-16 object-cover rounded-lg shadow-md border-2 border-border group-hover:scale-105 transition-transform duration-200"
             />
             <div className="absolute inset-0 rounded-lg bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
           </div>
           <div className="flex-1 min-w-0">
-            <h4 className="font-bold text-lg mb-1 truncate">{nomination.boardgame.name}</h4>
-            <p className="text-sm text-muted-foreground flex items-center gap-2">
+            <h4 className="font-semibold text-base mb-0.5 truncate">{nomination.boardgame.name}</h4>
+            <div className="flex items-center gap-2 flex-wrap">
               {nomination.boardgame.year && (
-                <span className="px-2 py-0.5 bg-muted rounded-full text-xs font-medium">
+                <span className="px-1.5 py-0.5 bg-muted rounded-full text-xs font-medium">
                   {nomination.boardgame.year}
                 </span>
               )}
-            </p>
+              {nomination.email && (
+                <span className="text-xs text-muted-foreground truncate">
+                  by {nomination.email}
+                </span>
+              )}
+            </div>
           </div>
-          <div className="flex items-center justify-center w-8 h-8 text-muted-foreground/50">
-            <GripVertical className="w-5 h-5" />
+          <div className="flex items-center justify-center w-6 h-6 text-muted-foreground/50 flex-shrink-0">
+            <GripVertical className="w-4 h-4" />
           </div>
         </CardContent>
       </Card>
