@@ -79,6 +79,12 @@ const SearchGames = ({ onSelectGame, selectedGame }) => {
   );
 };
 
+// Convert position to Eurovision points
+const getEurovisionPoints = (position) => {
+  const pointsMap = [12, 10, 8, 7, 6, 5, 4, 3, 2, 1];
+  return position <= 10 ? pointsMap[position - 1] : 0;
+};
+
 const SortableNominationCard = ({ nomination, rank }) => {
   const {
     attributes,
@@ -512,14 +518,14 @@ const EurovisionNomination = () => {
                               strategy={verticalListSortingStrategy}
                             >
                               <div
-                                className="space-y-3 max-h-[600px] overflow-y-auto pr-2 touch-none"
+                                className="space-y-3 touch-none"
                                 style={{ touchAction: 'none' }}
                               >
                                 {categoryRankings.map((nomination, index) => (
                                   <SortableNominationCard
                                     key={nomination.id}
                                     nomination={nomination}
-                                    rank={index + 1}
+                                    rank={getEurovisionPoints(index + 1)}
                                   />
                                 ))}
                               </div>
