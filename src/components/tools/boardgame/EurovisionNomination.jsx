@@ -139,17 +139,21 @@ const EurovisionNomination = () => {
     heavyWeight: [],
   });
 
+  const isTouchDevice =
+    typeof window !== 'undefined' &&
+    ("ontouchstart" in window ||
+      (typeof navigator !== "undefined" && navigator.maxTouchPoints > 0));
+
   const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    }),
-    useSensor(TouchSensor, {
-      activationConstraint: {
-        delay: 200,
-        tolerance: 8,
-      },
+    useSensor(isTouchDevice ? TouchSensor : PointerSensor, {
+      activationConstraint: isTouchDevice
+        ? {
+            delay: 200,
+            tolerance: 8,
+          }
+        : {
+            distance: 8,
+          },
     })
   );
 
@@ -498,7 +502,10 @@ const EurovisionNomination = () => {
                               items={categoryRankings.map(n => n.id)}
                               strategy={verticalListSortingStrategy}
                             >
-                              <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2">
+                              <div
+                                className="space-y-3 max-h-[600px] overflow-y-auto pr-2 touch-none"
+                                style={{ touchAction: 'none' }}
+                              >
                                 {categoryRankings.map((nomination, index) => (
                                   <SortableNominationCard
                                     key={nomination.id}
