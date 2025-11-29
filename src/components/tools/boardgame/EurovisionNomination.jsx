@@ -92,34 +92,43 @@ const SortableNominationCard = ({ nomination, rank }) => {
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging ? 0.5 : 1,
+    opacity: isDragging ? 0.8 : 1,
+    scale: isDragging ? 1.02 : 1,
   };
 
   return (
-    <div ref={setNodeRef} style={style} className="touch-none">
-      <Card className="relative">
-        <CardContent className="flex items-center gap-4 p-4">
-          <div
-            {...attributes}
-            {...listeners}
-            className="cursor-grab active:cursor-grabbing flex items-center justify-center w-8 h-8 bg-muted rounded hover:bg-muted/80 transition-colors touch-none"
-            style={{ touchAction: 'none' }}
-          >
-            <GripVertical className="w-4 h-4 text-muted-foreground" />
-          </div>
-          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground font-bold text-sm">
+    <div 
+      ref={setNodeRef} 
+      style={style} 
+      className="touch-none"
+      {...attributes}
+      {...listeners}
+    >
+      <Card className="relative overflow-hidden cursor-grab active:cursor-grabbing hover:shadow-lg transition-all duration-200 border-2 hover:border-primary/20">
+        <CardContent className="flex items-center gap-4 p-4 bg-gradient-to-r from-background to-muted/10">
+          <div className="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary/70 text-primary-foreground font-bold text-lg shadow-md">
             {rank}
           </div>
-          <img
-            src={nomination.boardgame.square200 || '/placeholder.svg'}
-            alt={nomination.boardgame.name}
-            className="w-20 h-20 object-cover rounded"
-          />
-          <div className="flex-1">
-            <h4 className="font-semibold">{nomination.boardgame.name}</h4>
-            <p className="text-sm text-muted-foreground">
-              {nomination.boardgame.year}
+          <div className="relative group">
+            <img
+              src={nomination.boardgame.square200 || '/placeholder.svg'}
+              alt={nomination.boardgame.name}
+              className="w-24 h-24 object-cover rounded-lg shadow-md border-2 border-border group-hover:scale-105 transition-transform duration-200"
+            />
+            <div className="absolute inset-0 rounded-lg bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h4 className="font-bold text-lg mb-1 truncate">{nomination.boardgame.name}</h4>
+            <p className="text-sm text-muted-foreground flex items-center gap-2">
+              {nomination.boardgame.year && (
+                <span className="px-2 py-0.5 bg-muted rounded-full text-xs font-medium">
+                  {nomination.boardgame.year}
+                </span>
+              )}
             </p>
+          </div>
+          <div className="flex items-center justify-center w-8 h-8 text-muted-foreground/50">
+            <GripVertical className="w-5 h-5" />
           </div>
         </CardContent>
       </Card>
