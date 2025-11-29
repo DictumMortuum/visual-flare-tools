@@ -12,6 +12,7 @@ import { UserContext } from '@/context';
 import { DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import useConfig from '../../../hooks/useConfig';
 
 const SearchGames = ({ onSelectGame, selectedGame }) => {
   const [input, setInput] = useState("");
@@ -153,11 +154,14 @@ const EurovisionNomination = () => {
   const [activeTab, setActiveTab] = useState('nominate');
   const [isAddGameDialogOpen, setIsAddGameDialogOpen] = useState(false);
   const [currentCategory, setCurrentCategory] = useState(null);
+  const { value: EUROVISION_SHOW_VOTES_LIST } = useConfig(!!user?.user_id, "EUROVISION_SHOW_VOTES_LIST");
   const [rankings, setRankings] = useState({
     partyGame: [],
     midWeight: [],
     heavyWeight: [],
   });
+
+  console.log(EUROVISION_SHOW_VOTES_LIST);
 
   const isTouchDevice =
     typeof window !== 'undefined' &&
@@ -344,7 +348,6 @@ const EurovisionNomination = () => {
   };
 
   React.useEffect(() => {
-    console.log(votesLoading, myVotesStatus, myVotes, myVotes?.votes?.length)
     if (myVotesStatus === 'success' && myVotes.id !== 0) {
       setRankings(myVotes.votes);
     } else if (othersNominations.length > 0 && activeTab === 'vote') {
@@ -356,22 +359,6 @@ const EurovisionNomination = () => {
       setRankings(newRankings);
     }
   }, [votesLoading, myVotes, othersNominations, activeTab]);
-
-  // Initialize rankings when nominations load
-  // React.useEffect(() => {
-  //   console.log(myVotes?.votes)
-  //   if (myVotes?.votes?.length > 0) {
-  //     console.log("asdf")
-  //     setRankings(myVotes.votes);
-  //   } else if (othersNominations.length > 0 && activeTab === 'vote') {
-  //     const newRankings = {
-  //       partyGame: othersNominations.filter(n => n.category === 'partyGame'),
-  //       midWeight: othersNominations.filter(n => n.category === 'midWeight'),
-  //       heavyWeight: othersNominations.filter(n => n.category === 'heavyWeight'),
-  //     };
-  //     setRankings(newRankings);
-  //   }
-  // }, [othersNominations, myVotes, activeTab]);
 
   const categories = {
     partyGame: 'Party Game',
@@ -422,7 +409,7 @@ const EurovisionNomination = () => {
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="nominate">My Nominations</TabsTrigger>
-              <TabsTrigger value="vote">Vote</TabsTrigger>
+              <TabsTrigger value="vote" disabled={!EUROVISION_SHOW_VOTES_LIST}>Vote</TabsTrigger>
             </TabsList>
 
             <TabsContent value="nominate" className="space-y-6 mt-6">
