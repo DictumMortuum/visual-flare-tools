@@ -21,7 +21,7 @@ const SearchGames = ({ onSelectGame, selectedGame }) => {
   const debouncedSearchTerm = useDebounce(searchQuery, 1000);
 
   const fetchBoardgames = async (name) => {
-    const rs = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/rest/boardgames?filter={"name@simplelike":"${name}"}&range=[0,9]`);
+    const rs = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/rest/boardgames?filter={"name@eurovisionlike":"${name}"}&range=[0,9]`);
     setShowResults(true);
     return rs.json();
   }
