@@ -58,8 +58,6 @@ const Timer = () => {
     }
   };
 
-  console.log(hidePlayerTimes)
-
   // End game and show statistics
   const endGame = () => {
     // Add current time to current player's total

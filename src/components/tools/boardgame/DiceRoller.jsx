@@ -48,8 +48,6 @@ const DiceRoller = () => {
       setResults(response.results);
       setTotal(response.total);
     } catch (error) {
-      console.log("Using local dice calculation due to backend error:", error);
-      
       // Fallback to local calculation
       const rolls = Array(diceCount).fill(0).map(() => 
         Math.floor(Math.random() * diceSides) + 1

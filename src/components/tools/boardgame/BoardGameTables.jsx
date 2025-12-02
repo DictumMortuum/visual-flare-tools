@@ -179,7 +179,6 @@ const CopyLinkButton = ({ id }) => {
 
 const StartButton = ({ id }) => {
   const onClick = () => {
-    console.log("Clicked", id)
     // setTables(tables.map(table => {
     //   if (table.id === tableId && table.creator === email) {
     //     toast.success(`${table.boardgame.name} has started! Table removed from listings.`);

@@ -161,8 +161,6 @@ const EurovisionNomination = () => {
     heavyWeight: [],
   });
 
-  console.log(EUROVISION_SHOW_VOTES_LIST);
-
   const isTouchDevice =
     typeof window !== 'undefined' &&
     ("ontouchstart" in window ||
@@ -224,9 +222,11 @@ const EurovisionNomination = () => {
       );
       
       if (!response.ok) throw new Error('Failed to fetch nominations');
-      return response.json();
+      return response.json().then(d => {
+        return d.filter(d => d.email !== user.user_id)
+      });
     },
-    enabled: !!user?.user_id && activeTab === 'vote',
+    enabled: !!user?.user_id,
   });
 
   // Mutation to save/update nomination
@@ -450,6 +450,11 @@ const EurovisionNomination = () => {
                             <p className="text-sm text-muted-foreground">
                               {nomination.boardgame.year}
                             </p>
+                            {othersNominations.filter(d => d.boardgame_id === nomination.boardgame_id).map(i => (
+                              <p className="text-xs text-muted-foreground">
+                                Also nominated by {i.email}.
+                              </p>
+                            ))}
                           </div>
                           <Button
                             variant="ghost"
