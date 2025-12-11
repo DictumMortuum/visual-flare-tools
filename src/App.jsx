@@ -12,6 +12,7 @@ import NotFound from "./pages/NotFound.jsx";
 import Login from "./components/auth/Login.jsx";
 import { WishlistRouter } from "@/components/tools/general/Wishlist";
 import { TableRouter } from "@/components/tools/boardgame/BoardGameTables";
+import EurovisionLeaderboard from "./pages/EurovisionLeaderboard.jsx";
 import { UserProvider } from './context';
 
 const queryClient = new QueryClient();
@@ -34,6 +35,7 @@ const App = () => (
                 <Route path="/login" element={<Login />} />
                 <Route path="*" element={<NotFound />} />
               </Route>
+              <Route path="/eurovision-leaderboard" element={<EurovisionLeaderboard />} />
             </Routes>
           </HashRouter>
         </TooltipProvider>
