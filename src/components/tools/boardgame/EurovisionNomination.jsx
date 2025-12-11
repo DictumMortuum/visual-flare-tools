@@ -103,6 +103,9 @@ const SortableNominationCard = ({ nomination, rank }) => {
     scale: isDragging ? 1.02 : 1,
   };
 
+  // nomination.emails is an array of all nominators
+  const emails = nomination.emails || [nomination.email];
+
   return (
     <div 
       ref={setNodeRef} 
@@ -126,17 +129,17 @@ const SortableNominationCard = ({ nomination, rank }) => {
           </div>
           <div className="flex-1 min-w-0">
             <h4 className="font-semibold text-base mb-0.5 truncate">{nomination.boardgame.name}</h4>
-            <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex flex-col gap-0.5">
               {nomination.boardgame.year && (
-                <span className="px-1.5 py-0.5 bg-muted rounded-full text-xs font-medium">
+                <span className="px-1.5 py-0.5 bg-muted rounded-full text-xs font-medium w-fit">
                   {nomination.boardgame.year}
                 </span>
               )}
-              {nomination.email && (
-                <span className="text-xs text-muted-foreground truncate">
-                  by {nomination.email}
-                </span>
-              )}
+              <div className="text-xs text-muted-foreground">
+                {emails.map((email, idx) => (
+                  <div key={idx}>by {email}</div>
+                ))}
+              </div>
             </div>
           </div>
           <div className="flex items-center justify-center w-6 h-6 text-muted-foreground/50 flex-shrink-0">
@@ -347,14 +350,30 @@ const EurovisionNomination = () => {
     saveVotesMutation.mutate();
   };
 
+  // Helper function to merge nominations by boardgame_id
+  const mergeNominationsByGame = (nominations) => {
+    const merged = {};
+    nominations.forEach(n => {
+      if (merged[n.boardgame_id]) {
+        merged[n.boardgame_id].emails.push(n.email);
+      } else {
+        merged[n.boardgame_id] = {
+          ...n,
+          emails: [n.email],
+        };
+      }
+    });
+    return Object.values(merged);
+  };
+
   React.useEffect(() => {
     if (myVotesStatus === 'success' && myVotes.id !== 0) {
       setRankings(myVotes.votes);
     } else if (othersNominations.length > 0 && activeTab === 'vote') {
       const newRankings = {
-        partyGame: othersNominations.filter(n => n.category === 'partyGame'),
-        midWeight: othersNominations.filter(n => n.category === 'midWeight'),
-        heavyWeight: othersNominations.filter(n => n.category === 'heavyWeight'),
+        partyGame: mergeNominationsByGame(othersNominations.filter(n => n.category === 'partyGame')),
+        midWeight: mergeNominationsByGame(othersNominations.filter(n => n.category === 'midWeight')),
+        heavyWeight: mergeNominationsByGame(othersNominations.filter(n => n.category === 'heavyWeight')),
       };
       setRankings(newRankings);
     }
