@@ -193,7 +193,9 @@ const EurovisionNomination = () => {
       );
       
       if (!response.ok) throw new Error('Failed to fetch nominations');
-      return response.json();
+      const data = await response.json();
+      // Filter client-side to ensure only current user's nominations
+      return data.filter(n => n.email === user.user_id);
     },
     enabled: !!user?.user_id,
   });
