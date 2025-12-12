@@ -91,36 +91,40 @@ const ShimmerEffect = () => (
   />
 );
 
-const LeaderboardCard = ({ game, rank, totalPoints, isHighlighted, isWinnersMode }) => {
+const LeaderboardCard = ({ game, rank, totalPoints, isHighlighted, isWinnersMode, hasHighlightedEmail }) => {
   const styles = getRankStyles(rank);
   const IconComponent = styles.icon;
+  const isGreyedOut = hasHighlightedEmail && !isHighlighted;
 
   return (
     <motion.div
       layout
       initial={{ opacity: 0, scale: 0.8, y: 20 }}
       animate={{ 
-        opacity: isHighlighted ? 1 : (isWinnersMode && rank > 3 ? 0.3 : 1), 
-        scale: isHighlighted ? 1.05 : (isWinnersMode && rank > 3 ? 0.9 : 1), 
+        opacity: isGreyedOut ? 0.25 : (isHighlighted ? 1 : (isWinnersMode && rank > 3 ? 0.3 : 1)), 
+        scale: isHighlighted ? 1.08 : (isGreyedOut ? 0.95 : (isWinnersMode && rank > 3 ? 0.9 : 1)), 
         y: 0,
-        filter: isHighlighted ? 'brightness(1.2)' : 'brightness(1)',
+        filter: isGreyedOut ? 'grayscale(100%) brightness(0.5)' : (isHighlighted ? 'brightness(1.1)' : 'brightness(1)'),
       }}
       exit={{ opacity: 0, scale: 0.8, y: -20 }}
       transition={{
         layout: { type: 'spring', stiffness: 300, damping: 30 },
-        opacity: { duration: 0.3 },
+        opacity: { duration: 0.4 },
         scale: { type: 'spring', stiffness: 400, damping: 25 },
-        filter: { duration: 0.3 },
+        filter: { duration: 0.4 },
       }}
       className={`
         relative overflow-hidden rounded-xl border-2 
         ${isHighlighted 
-          ? 'border-yellow-400 shadow-[0_0_40px_rgba(250,204,21,0.6),0_0_80px_rgba(250,204,21,0.3)] z-10' 
-          : `${styles.border} ${styles.glow}`
+          ? 'border-yellow-400 shadow-[0_0_50px_rgba(250,204,21,0.7),0_0_100px_rgba(250,204,21,0.4)] z-20' 
+          : isGreyedOut 
+            ? 'border-border/30' 
+            : `${styles.border} ${styles.glow}`
         }
-        bg-card/80 backdrop-blur-sm
-        ${rank <= 3 ? 'scale-100' : 'scale-95 opacity-90'}
-        ${isHighlighted ? 'ring-4 ring-yellow-400/50' : ''}
+        ${isHighlighted ? 'bg-gradient-to-br from-yellow-900/40 via-amber-900/30 to-orange-900/40' : 'bg-card/80'} 
+        backdrop-blur-sm
+        ${rank <= 3 && !isGreyedOut ? 'scale-100' : isGreyedOut ? '' : 'scale-95 opacity-90'}
+        ${isHighlighted ? 'ring-4 ring-yellow-400/60' : ''}
       `}
     >
       {/* Highlight effects */}
@@ -129,12 +133,12 @@ const LeaderboardCard = ({ game, rank, totalPoints, isHighlighted, isWinnersMode
           <FloatingParticles />
           <ShimmerEffect />
           <motion.div 
-            className="absolute inset-0 bg-gradient-to-br from-yellow-400/20 via-amber-500/10 to-orange-500/20"
-            animate={{ opacity: [0.3, 0.6, 0.3] }}
+            className="absolute inset-0 bg-gradient-to-br from-yellow-400/30 via-amber-500/20 to-orange-500/30"
+            animate={{ opacity: [0.4, 0.7, 0.4] }}
             transition={{ duration: 1.5, repeat: Infinity }}
           />
           <motion.div
-            className="absolute -inset-1 bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-400 opacity-30 blur-xl"
+            className="absolute -inset-2 bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-400 opacity-40 blur-2xl"
             animate={{ 
               rotate: [0, 360],
             }}
@@ -144,7 +148,7 @@ const LeaderboardCard = ({ game, rank, totalPoints, isHighlighted, isWinnersMode
       )}
 
       {/* Background gradient overlay for top 3 */}
-      {rank <= 3 && !isHighlighted && (
+      {rank <= 3 && !isHighlighted && !isGreyedOut && (
         <div className={`absolute inset-0 ${styles.bg} opacity-10`} />
       )}
       
@@ -152,14 +156,14 @@ const LeaderboardCard = ({ game, rank, totalPoints, isHighlighted, isWinnersMode
         {/* Rank Badge */}
         <div className={`
           flex items-center justify-center w-12 h-12 rounded-xl font-bold text-lg
-          ${rank <= 3 ? styles.bg : 'bg-muted'} 
-          ${rank <= 3 ? 'text-white' : 'text-foreground'}
+          ${isHighlighted ? 'bg-gradient-to-br from-yellow-400 to-amber-500' : rank <= 3 ? styles.bg : 'bg-muted'} 
+          ${isHighlighted || rank <= 3 ? 'text-white' : 'text-foreground'}
           shadow-lg flex-shrink-0
         `}>
-          {IconComponent ? (
+          {IconComponent && !isHighlighted ? (
             <IconComponent className={`w-6 h-6 ${rank <= 3 ? 'text-white' : ''}`} />
           ) : (
-            rank
+            <span className={isHighlighted ? 'text-xl font-black' : ''}>{rank}</span>
           )}
         </div>
 
@@ -168,14 +172,14 @@ const LeaderboardCard = ({ game, rank, totalPoints, isHighlighted, isWinnersMode
           <motion.img
             src={game.flag || '/placeholder.svg'}
             alt={game.name || 'Game'}
-            className="w-14 h-14 object-cover rounded-lg shadow-md border-2 border-border"
+            className={`w-14 h-14 object-cover rounded-lg shadow-md border-2 ${isHighlighted ? 'border-yellow-400/50' : 'border-border'}`}
             animate={isHighlighted ? { 
-              scale: [1, 1.05, 1],
-              boxShadow: ['0 0 0 rgba(250,204,21,0)', '0 0 20px rgba(250,204,21,0.5)', '0 0 0 rgba(250,204,21,0)']
+              scale: [1, 1.08, 1],
+              boxShadow: ['0 0 0 rgba(250,204,21,0)', '0 0 30px rgba(250,204,21,0.6)', '0 0 0 rgba(250,204,21,0)']
             } : {}}
             transition={{ duration: 1.5, repeat: isHighlighted ? Infinity : 0 }}
           />
-          {rank <= 3 && (
+          {rank <= 3 && !isHighlighted && (
             <div className={`absolute -top-1 -right-1 w-5 h-5 rounded-full ${styles.bg} flex items-center justify-center shadow-md`}>
               <span className="text-[10px] font-bold text-white">{rank}</span>
             </div>
@@ -183,38 +187,38 @@ const LeaderboardCard = ({ game, rank, totalPoints, isHighlighted, isWinnersMode
           {isHighlighted && (
             <motion.div
               className="absolute -top-2 -right-2"
-              animate={{ rotate: [0, 15, -15, 0], scale: [1, 1.2, 1] }}
+              animate={{ rotate: [0, 15, -15, 0], scale: [1, 1.3, 1] }}
               transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 0.5 }}
             >
-              <Sparkles className="w-5 h-5 text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]" />
+              <Sparkles className="w-6 h-6 text-yellow-400 drop-shadow-[0_0_12px_rgba(250,204,21,1)]" />
             </motion.div>
           )}
         </div>
 
         {/* Game Info */}
         <div className="flex-1 min-w-0">
-          <h4 className={`font-bold truncate ${rank <= 3 ? 'text-base' : 'text-sm'} ${isHighlighted ? 'text-yellow-100' : ''}`}>
+          <h4 className={`font-bold truncate ${rank <= 3 ? 'text-base' : 'text-sm'} ${isHighlighted ? 'text-yellow-200 text-lg' : ''}`}>
             {game.name || 'Unknown Game'}
           </h4>
           {game.year && (
-            <span className="text-xs text-muted-foreground">{game.year}</span>
+            <span className={`text-xs ${isHighlighted ? 'text-yellow-300/80' : 'text-muted-foreground'}`}>{game.year}</span>
           )}
-          <div className="text-xs text-muted-foreground mt-0.5">
+          <div className={`text-sm mt-1 font-medium ${isHighlighted ? 'text-yellow-100 bg-yellow-400/20 px-2 py-0.5 rounded-md inline-block' : 'text-muted-foreground text-xs'}`}>
             {game.email.map(d => {
               const e = d.split("@");
               return e[0];
-            }).join(",")}
+            }).join(", ")}
           </div>
         </div>
 
         {/* Points */}
         <div className={`
           flex flex-col items-center justify-center px-3 py-1.5 rounded-lg
-          ${rank <= 3 ? styles.bg : 'bg-primary/10'}
-          ${rank <= 3 ? 'text-white' : 'text-primary'}
+          ${isHighlighted ? 'bg-gradient-to-br from-yellow-400 to-amber-500 text-white' : rank <= 3 ? styles.bg : 'bg-primary/10'}
+          ${!isHighlighted && rank <= 3 ? 'text-white' : !isHighlighted ? 'text-primary' : ''}
           flex-shrink-0
         `}>
-          <span className="text-xl font-black">{totalPoints}</span>
+          <span className={`font-black ${isHighlighted ? 'text-2xl' : 'text-xl'}`}>{totalPoints}</span>
           <span className="text-[10px] uppercase tracking-wider opacity-80">pts</span>
         </div>
       </div>
@@ -374,6 +378,7 @@ const CategoryColumn = ({ title, games, icon: Icon, highlightedEmail, isWinnersM
                   totalPoints={game.votes}
                   isHighlighted={isHighlighted}
                   isWinnersMode={false}
+                  hasHighlightedEmail={!!highlightedEmail}
                 />
               );
             })}
