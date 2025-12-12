@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Trophy, Crown, Medal, Award } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
+import useConfig from '../hooks/useConfig';
 
 const getEurovisionPoints = (position) => {
   const pointsMap = [12, 10, 8, 7, 6, 5, 4, 3, 2, 1];
@@ -169,6 +170,7 @@ const CategoryColumn = ({ title, games, icon: Icon }) => {
 };
 
 const EurovisionLeaderboard = () => {
+  const { value: EUROVISION_POLLING_ENABLED } = useConfig(true, "EUROVISION_POLLING_ENABLED");
   const [scores, setScores] = useState({
     partyGame: [],
     midWeight: [],
@@ -187,6 +189,7 @@ const EurovisionLeaderboard = () => {
     },
     refetchInterval: 5000, // Poll every 5 seconds
     refetchIntervalInBackground: true,
+    enabled: !!EUROVISION_POLLING_ENABLED,
   });
 
   const sortFn = (a, b) => {
