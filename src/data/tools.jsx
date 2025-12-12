@@ -47,7 +47,7 @@ export const toolsList = [
   // },
   {
     id: "eurovision-nomination",
-    title: "Eurovision Nomination",
+    title: "Eurovision",
     description: "Nominate your favorite games for the Eurovision Boardgame Competition",
     category: "boardgames",
     icon: <Trophy className="h-5 w-5" />,

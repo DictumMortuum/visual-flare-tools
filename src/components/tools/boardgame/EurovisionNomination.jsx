@@ -228,7 +228,8 @@ const EurovisionNomination = () => {
       
       if (!response.ok) throw new Error('Failed to fetch nominations');
       return response.json().then(d => {
-        return d.filter(d => d.email !== user.user_id)
+        const my_ids = d.filter(d=> d.email === user.user_id).map(d => d.boardgame_id);
+        return d.filter(game => !my_ids.includes(game.boardgame_id));
       });
     },
     enabled: !!user?.user_id,
@@ -391,7 +392,7 @@ const EurovisionNomination = () => {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
-          <p className="text-lg text-muted-foreground">Please log in to access Eurovision Nomination.</p>
+          <p className="text-lg text-muted-foreground">Please log in to access Eurovision.</p>
         </div>
       </div>
     );
@@ -419,7 +420,7 @@ const EurovisionNomination = () => {
           <Trophy className="h-4 w-4" />
           Eurovision Boardgame Competition
         </div>
-        <h1 className="text-4xl font-bold tracking-tight">Eurovision Nomination</h1>
+        <h1 className="text-4xl font-bold tracking-tight">Eurovision</h1>
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
           Nominate your favorite games and vote on others' nominations
         </p>

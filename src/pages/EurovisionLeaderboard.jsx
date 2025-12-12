@@ -49,6 +49,8 @@ const LeaderboardCard = ({ game, rank, totalPoints }) => {
   const styles = getRankStyles(rank);
   const IconComponent = styles.icon;
 
+  console.log(game, rank, totalPoints)
+
   return (
     <motion.div
       layout
@@ -89,8 +91,8 @@ const LeaderboardCard = ({ game, rank, totalPoints }) => {
         {/* Game Image */}
         <div className="relative flex-shrink-0">
           <img
-            src={game.boardgame?.square200 || '/placeholder.svg'}
-            alt={game.boardgame?.name || 'Game'}
+            src={game.flag || '/placeholder.svg'}
+            alt={game.name || 'Game'}
             className="w-14 h-14 object-cover rounded-lg shadow-md border-2 border-border"
           />
           {rank <= 3 && (
@@ -103,13 +105,17 @@ const LeaderboardCard = ({ game, rank, totalPoints }) => {
         {/* Game Info */}
         <div className="flex-1 min-w-0">
           <h4 className={`font-bold truncate ${rank <= 3 ? 'text-base' : 'text-sm'}`}>
-            {game.boardgame?.name || 'Unknown Game'}
+            {game.name || 'Unknown Game'}
           </h4>
-          {game.boardgame?.year && (
-            <span className="text-xs text-muted-foreground">{game.boardgame.year}</span>
+          {game.year && (
+            <span className="text-xs text-muted-foreground">{game.year}</span>
           )}
           <div className="text-xs text-muted-foreground mt-0.5">
-            {game.emails?.length || 1} nomination{(game.emails?.length || 1) > 1 ? 's' : ''}
+            {game.email.map(d => {
+              const e = d.split("@");
+              return e[0];
+            }).join(",")}
+            {/* {game.email?.length || 1} nomination{(game.email?.length || 1) > 1 ? 's' : ''} */}
           </div>
         </div>
 
@@ -147,7 +153,7 @@ const CategoryColumn = ({ title, games, icon: Icon }) => {
               key={game.boardgame_id}
               game={game}
               rank={index + 1}
-              totalPoints={game.totalPoints}
+              totalPoints={game.votes}
             />
           ))}
         </AnimatePresence>
@@ -174,7 +180,7 @@ const EurovisionLeaderboard = () => {
     queryKey: ['eurovision-scores'],
     queryFn: async () => {
       const response = await fetch(
-        `${import.meta.env.VITE_API_ENDPOINT}/rest/eurovisionscores`
+        `${import.meta.env.VITE_API_ENDPOINT}/rest/eurovisionvotes/all`
       );
       if (!response.ok) throw new Error('Failed to fetch scores');
       return response.json();
@@ -183,13 +189,24 @@ const EurovisionLeaderboard = () => {
     refetchIntervalInBackground: true,
   });
 
+  const sortFn = (a, b) => {
+    const votes = b.votes - a.votes;
+    const id = b.boardgame_id - a.boardgame_id;
+
+    if (votes === 0) {
+      return id;
+    } else {
+      return votes;
+    }
+  }
+
   useEffect(() => {
     if (data) {
       // Sort by totalPoints descending
       const sortedData = {
-        partyGame: [...(data.partyGame || [])].sort((a, b) => b.totalPoints - a.totalPoints),
-        midWeight: [...(data.midWeight || [])].sort((a, b) => b.totalPoints - a.totalPoints),
-        heavyWeight: [...(data.heavyWeight || [])].sort((a, b) => b.totalPoints - a.totalPoints),
+        partyGame: [...(data.partyGame || [])].sort(sortFn),
+        midWeight: [...(data.midWeight || [])].sort(sortFn),
+        heavyWeight: [...(data.heavyWeight || [])].sort(sortFn),
       };
       setScores(sortedData);
     }
@@ -233,18 +250,6 @@ const EurovisionLeaderboard = () => {
       </div>
 
       <div className="relative h-full flex flex-col max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-6 flex-shrink-0">
-          <div className="inline-flex items-center gap-3 px-6 py-3 bg-primary/10 rounded-full border border-primary/20 mb-3">
-            <Trophy className="w-6 h-6 text-primary" />
-            <span className="text-lg font-bold tracking-wide">EUROVISION BOARDGAME</span>
-            <Trophy className="w-6 h-6 text-primary" />
-          </div>
-          <h1 className="text-4xl font-black tracking-tight bg-gradient-to-r from-primary via-primary/80 to-primary bg-clip-text text-transparent">
-            LIVE LEADERBOARD
-          </h1>
-        </div>
-
         {/* Three Columns */}
         <div className="flex-1 grid grid-cols-3 gap-6 min-h-0">
           {categories.map(({ key, title, icon }) => (
