@@ -606,7 +606,7 @@ const EurovisionLeaderboard = () => {
         />
       </div>
 
-      <div className={`relative h-full flex flex-col max-w-[1600px] mx-auto ${highlightedEmail ? 'pt-24' : ''}`}
+      <div className={`relative h-full flex flex-col max-w-[1600px] mx-auto ${highlightedEmail ? 'pt-24' : ''}`}>
         {/* Winners Mode Header */}
         <AnimatePresence>
           {isWinnersMode && (
