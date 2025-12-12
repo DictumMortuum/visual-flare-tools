@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Trophy, Crown, Medal, Award } from 'lucide-react';
+import { Trophy, Crown, Medal, Award, Sparkles, Star, PartyPopper } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import useConfig from '../hooks/useConfig';
@@ -46,31 +46,105 @@ const getRankStyles = (rank) => {
   }
 };
 
-const LeaderboardCard = ({ game, rank, totalPoints }) => {
+// Floating particles component for highlighted cards
+const FloatingParticles = () => (
+  <div className="absolute inset-0 overflow-hidden pointer-events-none">
+    {[...Array(6)].map((_, i) => (
+      <motion.div
+        key={i}
+        className="absolute w-2 h-2 rounded-full bg-yellow-400"
+        initial={{ 
+          x: Math.random() * 100 + '%', 
+          y: '100%',
+          opacity: 0,
+          scale: 0 
+        }}
+        animate={{ 
+          y: '-20%',
+          opacity: [0, 1, 0],
+          scale: [0, 1, 0.5],
+        }}
+        transition={{
+          duration: 2 + Math.random() * 2,
+          repeat: Infinity,
+          delay: i * 0.3,
+          ease: 'easeOut',
+        }}
+      />
+    ))}
+  </div>
+);
+
+// Shimmer effect for highlighted cards
+const ShimmerEffect = () => (
+  <motion.div
+    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -skew-x-12"
+    animate={{
+      x: ['-200%', '200%'],
+    }}
+    transition={{
+      duration: 2,
+      repeat: Infinity,
+      repeatDelay: 1,
+      ease: 'easeInOut',
+    }}
+  />
+);
+
+const LeaderboardCard = ({ game, rank, totalPoints, isHighlighted, isWinnersMode }) => {
   const styles = getRankStyles(rank);
   const IconComponent = styles.icon;
-
-  console.log(game, rank, totalPoints)
 
   return (
     <motion.div
       layout
       initial={{ opacity: 0, scale: 0.8, y: 20 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
+      animate={{ 
+        opacity: isHighlighted ? 1 : (isWinnersMode && rank > 3 ? 0.3 : 1), 
+        scale: isHighlighted ? 1.05 : (isWinnersMode && rank > 3 ? 0.9 : 1), 
+        y: 0,
+        filter: isHighlighted ? 'brightness(1.2)' : 'brightness(1)',
+      }}
       exit={{ opacity: 0, scale: 0.8, y: -20 }}
       transition={{
         layout: { type: 'spring', stiffness: 300, damping: 30 },
         opacity: { duration: 0.3 },
-        scale: { duration: 0.3 },
+        scale: { type: 'spring', stiffness: 400, damping: 25 },
+        filter: { duration: 0.3 },
       }}
       className={`
-        relative overflow-hidden rounded-xl border-2 ${styles.border} ${styles.glow}
+        relative overflow-hidden rounded-xl border-2 
+        ${isHighlighted 
+          ? 'border-yellow-400 shadow-[0_0_40px_rgba(250,204,21,0.6),0_0_80px_rgba(250,204,21,0.3)] z-10' 
+          : `${styles.border} ${styles.glow}`
+        }
         bg-card/80 backdrop-blur-sm
         ${rank <= 3 ? 'scale-100' : 'scale-95 opacity-90'}
+        ${isHighlighted ? 'ring-4 ring-yellow-400/50' : ''}
       `}
     >
+      {/* Highlight effects */}
+      {isHighlighted && (
+        <>
+          <FloatingParticles />
+          <ShimmerEffect />
+          <motion.div 
+            className="absolute inset-0 bg-gradient-to-br from-yellow-400/20 via-amber-500/10 to-orange-500/20"
+            animate={{ opacity: [0.3, 0.6, 0.3] }}
+            transition={{ duration: 1.5, repeat: Infinity }}
+          />
+          <motion.div
+            className="absolute -inset-1 bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-400 opacity-30 blur-xl"
+            animate={{ 
+              rotate: [0, 360],
+            }}
+            transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
+          />
+        </>
+      )}
+
       {/* Background gradient overlay for top 3 */}
-      {rank <= 3 && (
+      {rank <= 3 && !isHighlighted && (
         <div className={`absolute inset-0 ${styles.bg} opacity-10`} />
       )}
       
@@ -91,21 +165,35 @@ const LeaderboardCard = ({ game, rank, totalPoints }) => {
 
         {/* Game Image */}
         <div className="relative flex-shrink-0">
-          <img
+          <motion.img
             src={game.flag || '/placeholder.svg'}
             alt={game.name || 'Game'}
             className="w-14 h-14 object-cover rounded-lg shadow-md border-2 border-border"
+            animate={isHighlighted ? { 
+              scale: [1, 1.05, 1],
+              boxShadow: ['0 0 0 rgba(250,204,21,0)', '0 0 20px rgba(250,204,21,0.5)', '0 0 0 rgba(250,204,21,0)']
+            } : {}}
+            transition={{ duration: 1.5, repeat: isHighlighted ? Infinity : 0 }}
           />
           {rank <= 3 && (
             <div className={`absolute -top-1 -right-1 w-5 h-5 rounded-full ${styles.bg} flex items-center justify-center shadow-md`}>
               <span className="text-[10px] font-bold text-white">{rank}</span>
             </div>
           )}
+          {isHighlighted && (
+            <motion.div
+              className="absolute -top-2 -right-2"
+              animate={{ rotate: [0, 15, -15, 0], scale: [1, 1.2, 1] }}
+              transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 0.5 }}
+            >
+              <Sparkles className="w-5 h-5 text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]" />
+            </motion.div>
+          )}
         </div>
 
         {/* Game Info */}
         <div className="flex-1 min-w-0">
-          <h4 className={`font-bold truncate ${rank <= 3 ? 'text-base' : 'text-sm'}`}>
+          <h4 className={`font-bold truncate ${rank <= 3 ? 'text-base' : 'text-sm'} ${isHighlighted ? 'text-yellow-100' : ''}`}>
             {game.name || 'Unknown Game'}
           </h4>
           {game.year && (
@@ -116,7 +204,6 @@ const LeaderboardCard = ({ game, rank, totalPoints }) => {
               const e = d.split("@");
               return e[0];
             }).join(",")}
-            {/* {game.email?.length || 1} nomination{(game.email?.length || 1) > 1 ? 's' : ''} */}
           </div>
         </div>
 
@@ -135,31 +222,165 @@ const LeaderboardCard = ({ game, rank, totalPoints }) => {
   );
 };
 
-const CategoryColumn = ({ title, games, icon: Icon }) => {
+// Winner Card for Winners Mode
+const WinnerCard = ({ game, rank, categoryTitle }) => {
+  const styles = getRankStyles(rank);
+  const IconComponent = styles.icon;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0, rotateY: 90 }}
+      animate={{ opacity: 1, scale: 1, rotateY: 0 }}
+      transition={{ 
+        type: 'spring', 
+        stiffness: 200, 
+        damping: 20,
+        delay: rank * 0.3 
+      }}
+      className="relative"
+    >
+      {/* Celebration particles */}
+      <div className="absolute inset-0 overflow-visible pointer-events-none">
+        {[...Array(12)].map((_, i) => (
+          <motion.div
+            key={i}
+            className={`absolute w-3 h-3 rounded-full ${
+              i % 3 === 0 ? 'bg-yellow-400' : i % 3 === 1 ? 'bg-amber-500' : 'bg-orange-400'
+            }`}
+            style={{ left: '50%', top: '50%' }}
+            initial={{ x: 0, y: 0, scale: 0, opacity: 0 }}
+            animate={{ 
+              x: Math.cos(i * 30 * Math.PI / 180) * (80 + Math.random() * 40),
+              y: Math.sin(i * 30 * Math.PI / 180) * (80 + Math.random() * 40),
+              scale: [0, 1, 0],
+              opacity: [0, 1, 0],
+            }}
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              delay: i * 0.1 + rank * 0.5,
+              ease: 'easeOut',
+            }}
+          />
+        ))}
+      </div>
+
+      <motion.div
+        className={`
+          relative p-6 rounded-2xl border-4 ${styles.border} ${styles.bg}
+          shadow-2xl overflow-hidden
+        `}
+        animate={{
+          boxShadow: [
+            '0 0 30px rgba(250,204,21,0.3)',
+            '0 0 60px rgba(250,204,21,0.5)',
+            '0 0 30px rgba(250,204,21,0.3)',
+          ],
+        }}
+        transition={{ duration: 2, repeat: Infinity }}
+      >
+        <ShimmerEffect />
+        
+        {/* Crown/Medal for rank */}
+        <motion.div 
+          className="absolute -top-4 left-1/2 -translate-x-1/2"
+          animate={{ y: [0, -5, 0], rotate: [0, 5, -5, 0] }}
+          transition={{ duration: 2, repeat: Infinity }}
+        >
+          {IconComponent && (
+            <IconComponent className="w-12 h-12 text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.8)]" />
+          )}
+        </motion.div>
+
+        <div className="text-center pt-6">
+          <motion.img
+            src={game.flag || '/placeholder.svg'}
+            alt={game.name || 'Game'}
+            className="w-32 h-32 object-cover rounded-xl mx-auto shadow-2xl border-4 border-white/50"
+            animate={{ scale: [1, 1.02, 1] }}
+            transition={{ duration: 2, repeat: Infinity }}
+          />
+          
+          <motion.h3 
+            className="text-xl font-black text-white mt-4 drop-shadow-lg"
+            animate={{ scale: [1, 1.02, 1] }}
+            transition={{ duration: 1.5, repeat: Infinity }}
+          >
+            {game.name}
+          </motion.h3>
+          
+          <div className="flex items-center justify-center gap-2 mt-2">
+            <Star className="w-5 h-5 text-white" />
+            <span className="text-3xl font-black text-white">{game.votes}</span>
+            <span className="text-sm text-white/80">pts</span>
+          </div>
+          
+          <div className="text-white/70 text-sm mt-2">
+            {game.email?.map(d => d.split("@")[0]).join(", ")}
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+};
+
+const CategoryColumn = ({ title, games, icon: Icon, highlightedEmail, isWinnersMode }) => {
   return (
     <div className="flex flex-col h-full">
       {/* Category Header */}
-      <div className="flex items-center justify-center gap-2 mb-4 pb-3 border-b-2 border-primary/30">
-        <div className="p-2 rounded-lg bg-primary/20">
-          <Icon className="w-5 h-5 text-primary" />
+      <motion.div 
+        className="flex items-center justify-center gap-2 mb-4 pb-3 border-b-2 border-primary/30"
+        animate={isWinnersMode ? { scale: [1, 1.02, 1] } : {}}
+        transition={{ duration: 2, repeat: Infinity }}
+      >
+        <div className={`p-2 rounded-lg ${isWinnersMode ? 'bg-gradient-to-br from-yellow-400 to-amber-500' : 'bg-primary/20'}`}>
+          <Icon className={`w-5 h-5 ${isWinnersMode ? 'text-white' : 'text-primary'}`} />
         </div>
-        <h2 className="text-xl font-bold tracking-tight">{title}</h2>
-      </div>
+        <h2 className={`text-xl font-bold tracking-tight ${isWinnersMode ? 'text-yellow-400' : ''}`}>{title}</h2>
+        {isWinnersMode && (
+          <motion.div
+            animate={{ rotate: [0, 10, -10, 0] }}
+            transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 1 }}
+          >
+            <PartyPopper className="w-5 h-5 text-yellow-400" />
+          </motion.div>
+        )}
+      </motion.div>
 
       {/* Games List */}
       <div className="flex-1 space-y-2 overflow-hidden">
-        <AnimatePresence mode="popLayout">
-          {games.map((game, index) => (
-            <LeaderboardCard
-              key={game.boardgame_id}
-              game={game}
-              rank={index + 1}
-              totalPoints={game.votes}
-            />
-          ))}
-        </AnimatePresence>
+        {isWinnersMode ? (
+          // Winners Mode: Show top 3 as large celebration cards
+          <div className="flex flex-col items-center justify-center h-full gap-6">
+            {games.slice(0, 3).map((game, index) => (
+              <WinnerCard
+                key={game.boardgame_id}
+                game={game}
+                rank={index + 1}
+                categoryTitle={title}
+              />
+            ))}
+          </div>
+        ) : (
+          // Normal/Highlight Mode
+          <AnimatePresence mode="popLayout">
+            {games.map((game, index) => {
+              const isHighlighted = highlightedEmail && game.email?.includes(highlightedEmail);
+              return (
+                <LeaderboardCard
+                  key={game.boardgame_id}
+                  game={game}
+                  rank={index + 1}
+                  totalPoints={game.votes}
+                  isHighlighted={isHighlighted}
+                  isWinnersMode={false}
+                />
+              );
+            })}
+          </AnimatePresence>
+        )}
         
-        {games.length === 0 && (
+        {games.length === 0 && !isWinnersMode && (
           <div className="flex items-center justify-center h-32 text-muted-foreground">
             No votes yet
           </div>
@@ -169,6 +390,78 @@ const CategoryColumn = ({ title, games, icon: Icon }) => {
   );
 };
 
+// Presenter Banner Component
+const PresenterBanner = ({ email }) => {
+  if (!email) return null;
+  
+  const username = email.split("@")[0];
+  
+  return (
+    <motion.div
+      initial={{ y: -100, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      exit={{ y: -100, opacity: 0 }}
+      className="absolute top-0 left-0 right-0 z-50"
+    >
+      <div className="bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-400 p-4 shadow-2xl">
+        <motion.div 
+          className="flex items-center justify-center gap-4"
+          animate={{ scale: [1, 1.02, 1] }}
+          transition={{ duration: 1.5, repeat: Infinity }}
+        >
+          <Sparkles className="w-8 h-8 text-white animate-pulse" />
+          <div className="text-center">
+            <p className="text-white/80 text-sm uppercase tracking-widest">Now Presenting</p>
+            <h1 className="text-3xl font-black text-white drop-shadow-lg">{username}</h1>
+          </div>
+          <Sparkles className="w-8 h-8 text-white animate-pulse" />
+        </motion.div>
+      </div>
+      <div className="h-2 bg-gradient-to-r from-transparent via-yellow-400/50 to-transparent" />
+    </motion.div>
+  );
+};
+
+// Winners Celebration Overlay
+const WinnersCelebration = () => (
+  <div className="fixed inset-0 pointer-events-none overflow-hidden z-40">
+    {/* Confetti */}
+    {[...Array(50)].map((_, i) => (
+      <motion.div
+        key={i}
+        className={`absolute w-3 h-3 ${
+          ['bg-yellow-400', 'bg-amber-500', 'bg-orange-400', 'bg-red-400', 'bg-pink-400'][i % 5]
+        }`}
+        style={{
+          left: `${Math.random() * 100}%`,
+          top: -20,
+          borderRadius: Math.random() > 0.5 ? '50%' : '0',
+          transform: `rotate(${Math.random() * 360}deg)`,
+        }}
+        animate={{
+          y: ['0vh', '120vh'],
+          x: [0, (Math.random() - 0.5) * 200],
+          rotate: [0, 720],
+          opacity: [1, 0],
+        }}
+        transition={{
+          duration: 4 + Math.random() * 3,
+          repeat: Infinity,
+          delay: Math.random() * 5,
+          ease: 'linear',
+        }}
+      />
+    ))}
+    
+    {/* Spotlight effect */}
+    <motion.div
+      className="absolute inset-0 bg-gradient-radial from-yellow-400/10 via-transparent to-transparent"
+      animate={{ opacity: [0.3, 0.6, 0.3] }}
+      transition={{ duration: 3, repeat: Infinity }}
+    />
+  </div>
+);
+
 const EurovisionLeaderboard = () => {
   const { value: EUROVISION_POLLING_ENABLED } = useConfig(true, "EUROVISION_POLLING_ENABLED");
   const [scores, setScores] = useState({
@@ -176,6 +469,8 @@ const EurovisionLeaderboard = () => {
     midWeight: [],
     heavyWeight: [],
   });
+  const [highlightedEmail, setHighlightedEmail] = useState(null);
+  const [isWinnersMode, setIsWinnersMode] = useState(false);
 
   // Fetch scores with polling
   const { data, isLoading, error } = useQuery({
@@ -187,9 +482,37 @@ const EurovisionLeaderboard = () => {
       if (!response.ok) throw new Error('Failed to fetch scores');
       return response.json();
     },
-    refetchInterval: 5000, // Poll every 5 seconds
+    refetchInterval: 5000,
     refetchIntervalInBackground: true,
     enabled: !!EUROVISION_POLLING_ENABLED,
+  });
+
+  // Poll for active presenter/mode
+  useQuery({
+    queryKey: ['eurovision-mode'],
+    queryFn: async () => {
+      const response = await fetch(
+        `${import.meta.env.VITE_API_ENDPOINT}/rest/eurovisionmode`
+      );
+      if (!response.ok) throw new Error('Failed to fetch mode');
+      return response.json();
+    },
+    refetchInterval: 2000,
+    refetchIntervalInBackground: true,
+    enabled: !!EUROVISION_POLLING_ENABLED,
+    onSuccess: (modeData) => {
+      // Expected format: { mode: 'normal' | 'highlight' | 'winners', email?: string }
+      if (modeData?.mode === 'winners') {
+        setIsWinnersMode(true);
+        setHighlightedEmail(null);
+      } else if (modeData?.mode === 'highlight' && modeData?.email) {
+        setIsWinnersMode(false);
+        setHighlightedEmail(modeData.email);
+      } else {
+        setIsWinnersMode(false);
+        setHighlightedEmail(null);
+      }
+    },
   });
 
   const sortFn = (a, b) => {
@@ -201,11 +524,10 @@ const EurovisionLeaderboard = () => {
     } else {
       return votes;
     }
-  }
+  };
 
   useEffect(() => {
     if (data) {
-      // Sort by totalPoints descending
       const sortedData = {
         partyGame: [...(data.partyGame || [])].sort(sortFn),
         midWeight: [...(data.midWeight || [])].sort(sortFn),
@@ -244,15 +566,67 @@ const EurovisionLeaderboard = () => {
   }
 
   return (
-    <div className="h-screen w-screen overflow-hidden bg-gradient-to-br from-background via-background to-muted/30 p-6">
+    <div className={`h-screen w-screen overflow-hidden p-6 transition-colors duration-1000 ${
+      isWinnersMode 
+        ? 'bg-gradient-to-br from-slate-900 via-purple-900/50 to-slate-900' 
+        : 'bg-gradient-to-br from-background via-background to-muted/30'
+    }`}>
+      {/* Winners celebration overlay */}
+      <AnimatePresence>
+        {isWinnersMode && <WinnersCelebration />}
+      </AnimatePresence>
+
+      {/* Presenter banner */}
+      <AnimatePresence>
+        {highlightedEmail && <PresenterBanner email={highlightedEmail} />}
+      </AnimatePresence>
+
       {/* Background decoration */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute -top-40 -left-40 w-80 h-80 bg-primary/10 rounded-full blur-3xl" />
-        <div className="absolute -bottom-40 -right-40 w-80 h-80 bg-primary/10 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl" />
+        <motion.div 
+          className={`absolute -top-40 -left-40 w-80 h-80 rounded-full blur-3xl ${
+            isWinnersMode ? 'bg-yellow-500/20' : 'bg-primary/10'
+          }`}
+          animate={isWinnersMode ? { scale: [1, 1.2, 1], opacity: [0.2, 0.4, 0.2] } : {}}
+          transition={{ duration: 4, repeat: Infinity }}
+        />
+        <motion.div 
+          className={`absolute -bottom-40 -right-40 w-80 h-80 rounded-full blur-3xl ${
+            isWinnersMode ? 'bg-amber-500/20' : 'bg-primary/10'
+          }`}
+          animate={isWinnersMode ? { scale: [1.2, 1, 1.2], opacity: [0.4, 0.2, 0.4] } : {}}
+          transition={{ duration: 4, repeat: Infinity }}
+        />
+        <motion.div 
+          className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full blur-3xl ${
+            isWinnersMode ? 'bg-orange-500/10' : 'bg-primary/5'
+          }`}
+          animate={isWinnersMode ? { rotate: [0, 360] } : {}}
+          transition={{ duration: 60, repeat: Infinity, ease: 'linear' }}
+        />
       </div>
 
-      <div className="relative h-full flex flex-col max-w-7xl mx-auto">
+      <div className={`relative h-full flex flex-col max-w-7xl mx-auto ${highlightedEmail ? 'pt-24' : ''}`}>
+        {/* Winners Mode Header */}
+        <AnimatePresence>
+          {isWinnersMode && (
+            <motion.div
+              initial={{ opacity: 0, y: -50 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -50 }}
+              className="text-center mb-6"
+            >
+              <motion.h1 
+                className="text-5xl font-black bg-gradient-to-r from-yellow-400 via-amber-500 to-orange-500 bg-clip-text text-transparent drop-shadow-2xl"
+                animate={{ scale: [1, 1.02, 1] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              >
+                🏆 THE WINNERS 🏆
+              </motion.h1>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Three Columns */}
         <div className="flex-1 grid grid-cols-3 gap-6 min-h-0">
           {categories.map(({ key, title, icon }) => (
@@ -261,14 +635,16 @@ const EurovisionLeaderboard = () => {
               title={title}
               games={scores[key] || []}
               icon={icon}
+              highlightedEmail={highlightedEmail}
+              isWinnersMode={isWinnersMode}
             />
           ))}
         </div>
 
         {/* Footer */}
         <div className="text-center mt-4 flex-shrink-0">
-          <p className="text-sm text-muted-foreground">
-            Updates automatically every 5 seconds
+          <p className={`text-sm ${isWinnersMode ? 'text-yellow-400/60' : 'text-muted-foreground'}`}>
+            {isWinnersMode ? 'Congratulations to all winners!' : 'Updates automatically every 5 seconds'}
           </p>
         </div>
       </div>
