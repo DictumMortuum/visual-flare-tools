@@ -237,7 +237,7 @@ const WinnerCard = ({ game, rank, categoryTitle }) => {
         damping: 20,
         delay: rank * 0.3 
       }}
-      className="relative"
+      className="relative w-full max-w-[280px]"
     >
       {/* Celebration particles */}
       <div className="absolute inset-0 overflow-visible pointer-events-none">
@@ -267,8 +267,8 @@ const WinnerCard = ({ game, rank, categoryTitle }) => {
 
       <motion.div
         className={`
-          relative p-6 rounded-2xl border-4 ${styles.border} ${styles.bg}
-          shadow-2xl overflow-hidden
+          relative p-5 rounded-2xl border-4 ${styles.border} ${styles.bg}
+          shadow-2xl overflow-hidden h-[280px] flex flex-col
         `}
         animate={{
           boxShadow: [
@@ -288,21 +288,21 @@ const WinnerCard = ({ game, rank, categoryTitle }) => {
           transition={{ duration: 2, repeat: Infinity }}
         >
           {IconComponent && (
-            <IconComponent className="w-12 h-12 text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.8)]" />
+            <IconComponent className="w-10 h-10 text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.8)]" />
           )}
         </motion.div>
 
-        <div className="text-center pt-6">
+        <div className="text-center pt-4 flex-1 flex flex-col justify-center">
           <motion.img
             src={game.flag || '/placeholder.svg'}
             alt={game.name || 'Game'}
-            className="w-32 h-32 object-cover rounded-xl mx-auto shadow-2xl border-4 border-white/50"
+            className="w-24 h-24 object-cover rounded-xl mx-auto shadow-2xl border-4 border-white/50"
             animate={{ scale: [1, 1.02, 1] }}
             transition={{ duration: 2, repeat: Infinity }}
           />
           
           <motion.h3 
-            className="text-xl font-black text-white mt-4 drop-shadow-lg"
+            className="text-base font-black text-white mt-3 drop-shadow-lg line-clamp-2 px-2"
             animate={{ scale: [1, 1.02, 1] }}
             transition={{ duration: 1.5, repeat: Infinity }}
           >
@@ -310,12 +310,12 @@ const WinnerCard = ({ game, rank, categoryTitle }) => {
           </motion.h3>
           
           <div className="flex items-center justify-center gap-2 mt-2">
-            <Star className="w-5 h-5 text-white" />
-            <span className="text-3xl font-black text-white">{game.votes}</span>
-            <span className="text-sm text-white/80">pts</span>
+            <Star className="w-4 h-4 text-white" />
+            <span className="text-2xl font-black text-white">{game.votes}</span>
+            <span className="text-xs text-white/80">pts</span>
           </div>
           
-          <div className="text-white/70 text-sm mt-2">
+          <div className="text-white/70 text-xs mt-1 truncate px-2">
             {game.email?.map(d => d.split("@")[0]).join(", ")}
           </div>
         </div>
@@ -566,7 +566,7 @@ const EurovisionLeaderboard = () => {
   }
 
   return (
-    <div className={`h-screen w-screen overflow-hidden p-6 transition-colors duration-1000 ${
+    <div className={`h-screen w-screen overflow-hidden p-4 transition-colors duration-1000 ${
       isWinnersMode 
         ? 'bg-gradient-to-br from-slate-900 via-purple-900/50 to-slate-900' 
         : 'bg-gradient-to-br from-background via-background to-muted/30'
@@ -606,7 +606,7 @@ const EurovisionLeaderboard = () => {
         />
       </div>
 
-      <div className={`relative h-full flex flex-col max-w-7xl mx-auto ${highlightedEmail ? 'pt-24' : ''}`}>
+      <div className={`relative h-full flex flex-col max-w-[1600px] mx-auto ${highlightedEmail ? 'pt-24' : ''}`}
         {/* Winners Mode Header */}
         <AnimatePresence>
           {isWinnersMode && (
