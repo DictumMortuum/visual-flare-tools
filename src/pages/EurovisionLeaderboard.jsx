@@ -97,7 +97,7 @@ const LeaderboardCard = ({ game, rank, totalPoints, isHighlighted, hasHighlighte
       initial={{ opacity: 0, scale: 0.8, y: 20 }}
       animate={{ 
         opacity: isGreyedOut ? 0.2 : 1, 
-        scale: isHighlighted ? 1.02 : (isGreyedOut ? 0.95 : 1), 
+        scale: isHighlighted ? 1 : (isGreyedOut ? 0.95 : 1), 
         y: 0,
       }}
       exit={{ opacity: 0, scale: 0.8, y: -20 }}
@@ -147,10 +147,10 @@ const LeaderboardCard = ({ game, rank, totalPoints, isHighlighted, hasHighlighte
         <div className={`absolute inset-0 ${styles.bg} opacity-10`} />
       )}
       
-      <div className="relative flex items-center gap-2 p-2">
+      <div className="relative flex items-center gap-3 p-3">
         {/* Rank Badge - no gold/silver/bronze styling during highlight mode unless highlighted */}
         <div className={`
-          flex items-center justify-center w-8 h-8 rounded-lg font-bold text-sm
+          flex items-center justify-center w-12 h-12 rounded-lg font-bold text-sm
           ${isHighlighted 
             ? 'bg-gradient-to-br from-yellow-400 to-amber-500 text-white' 
             : hasHighlightedEmail 
@@ -485,7 +485,7 @@ const EurovisionLeaderboard = () => {
   const [highlightedEmail, setHighlightedEmail] = useState(null);
   const [isWinnersMode, setIsWinnersMode] = useState(false);
 
-  const { data: highlight, isHighlightLoading, highlighterror } = useQuery({
+  const { data: highlight = [], isHighlightLoading } = useQuery({
     queryKey: ['config', 'eurovision'],
     queryFn: async () => {
       const response = await fetch(
@@ -619,7 +619,7 @@ const EurovisionLeaderboard = () => {
         />
       </div>
 
-      <div className={`relative min-h-full flex flex-col w-full ${highlightedEmail ? 'pt-20' : ''}`}>
+      <div className={`relative min-h-full flex flex-col w-full ${highlightedEmail ? 'pt-10' : ''}`}>
         {/* Winners Mode Header */}
         <AnimatePresence>
           {isWinnersMode && (
@@ -631,7 +631,7 @@ const EurovisionLeaderboard = () => {
             >
               <motion.h1 
                 className="text-5xl font-black bg-gradient-to-r from-yellow-400 via-amber-500 to-orange-500 bg-clip-text text-transparent drop-shadow-2xl"
-                animate={{ scale: [1, 1.02, 1] }}
+                animate={{ scale: [1, 1, 1] }}
                 transition={{ duration: 2, repeat: Infinity }}
               >
                 🏆 THE WINNERS 🏆
