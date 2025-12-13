@@ -97,7 +97,7 @@ const LeaderboardCard = ({ game, rank, totalPoints, isHighlighted, hasHighlighte
       initial={{ opacity: 0, scale: 0.8, y: 20 }}
       animate={{ 
         opacity: isGreyedOut ? 0.2 : 1, 
-        scale: isHighlighted ? 1.05 : (isGreyedOut ? 0.92 : 1), 
+        scale: isHighlighted ? 1.02 : (isGreyedOut ? 0.95 : 1), 
         y: 0,
       }}
       exit={{ opacity: 0, scale: 0.8, y: -20 }}
@@ -110,16 +110,16 @@ const LeaderboardCard = ({ game, rank, totalPoints, isHighlighted, hasHighlighte
         filter: isGreyedOut ? 'grayscale(100%) brightness(0.4)' : 'none',
       }}
       className={`
-        relative overflow-hidden rounded-xl border-2 
+        relative overflow-hidden rounded-lg border 
         ${isHighlighted 
-          ? 'border-yellow-400 shadow-[0_0_50px_rgba(250,204,21,0.7),0_0_100px_rgba(250,204,21,0.4)] z-20' 
+          ? 'border-yellow-400 shadow-[0_0_30px_rgba(250,204,21,0.6)] z-20' 
           : isGreyedOut 
             ? 'border-border/20' 
             : `${styles.border} ${styles.glow}`
         }
         ${isHighlighted ? 'bg-gradient-to-br from-yellow-900/60 via-amber-900/50 to-orange-900/60' : 'bg-card/80'} 
         backdrop-blur-sm
-        ${isHighlighted ? 'ring-4 ring-yellow-400/60' : ''}
+        ${isHighlighted ? 'ring-2 ring-yellow-400/60' : ''}
       `}
     >
       {/* Highlight effects */}
