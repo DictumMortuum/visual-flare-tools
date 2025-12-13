@@ -223,13 +223,12 @@ const EurovisionNomination = () => {
     queryKey: ['others-nominations', user?.user_id],
     queryFn: async () => {
       const response = await fetch(
-        `${import.meta.env.VITE_API_ENDPOINT}/rest/eurovisionparticipations`
+        `${import.meta.env.VITE_API_ENDPOINT}/rest/eurovisionparticipations?range=[0,500]`
       );
       
       if (!response.ok) throw new Error('Failed to fetch nominations');
       return response.json().then(d => {
-        const my_ids = d.filter(d=> d.email === user.user_id).map(d => d.boardgame_id);
-        return d.filter(game => !my_ids.includes(game.boardgame_id));
+        return d.filter(d => d.email !== user.user_id)
       });
     },
     enabled: !!user?.user_id,
@@ -370,17 +369,21 @@ const EurovisionNomination = () => {
   };
 
   React.useEffect(() => {
+    const my_ids = myNominations.filter(d=> d.email === user.user_id).map(d => d.boardgame_id);
+    console.log(my_ids, user);
+    const voteList = othersNominations.filter(game => !my_ids.includes(game.boardgame_id));
+
     if (myVotesStatus === 'success' && myVotes.id !== 0) {
       setRankings(myVotes.votes);
-    } else if (othersNominations.length > 0 && activeTab === 'vote') {
+    } else if (voteList.length > 0 && activeTab === 'vote') {
       const newRankings = {
-        partyGame: mergeNominationsByGame(othersNominations.filter(n => n.category === 'partyGame')),
-        midWeight: mergeNominationsByGame(othersNominations.filter(n => n.category === 'midWeight')),
-        heavyWeight: mergeNominationsByGame(othersNominations.filter(n => n.category === 'heavyWeight')),
+        partyGame: mergeNominationsByGame(voteList.filter(n => n.category === 'partyGame')),
+        midWeight: mergeNominationsByGame(voteList.filter(n => n.category === 'midWeight')),
+        heavyWeight: mergeNominationsByGame(voteList.filter(n => n.category === 'heavyWeight')),
       };
       setRankings(newRankings);
     }
-  }, [votesLoading, myVotes, othersNominations, activeTab]);
+  }, [votesLoading, myVotes, othersNominations, myNominations, activeTab]);
 
   const categories = {
     partyGame: 'Party Game',
@@ -446,7 +449,7 @@ const EurovisionNomination = () => {
                           {title}
                         </h3>
                         <p className="text-sm text-muted-foreground">
-                          Nominate one game for this category
+                          Nominate a game for this category
                         </p>
                       </div>
                       {!nomination && (

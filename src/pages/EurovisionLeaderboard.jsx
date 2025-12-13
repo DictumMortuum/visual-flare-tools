@@ -4,11 +4,6 @@ import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import useConfig from '../hooks/useConfig';
 
-const getEurovisionPoints = (position) => {
-  const pointsMap = [12, 10, 8, 7, 6, 5, 4, 3, 2, 1];
-  return position <= 10 ? pointsMap[position - 1] : 0;
-};
-
 const getRankStyles = (rank) => {
   switch (rank) {
     case 1:
@@ -91,7 +86,7 @@ const ShimmerEffect = () => (
   />
 );
 
-const LeaderboardCard = ({ game, rank, totalPoints, isHighlighted, isWinnersMode, hasHighlightedEmail }) => {
+const LeaderboardCard = ({ game, rank, totalPoints, isHighlighted, hasHighlightedEmail }) => {
   const styles = getRankStyles(rank);
   const IconComponent = styles.icon;
   const isGreyedOut = hasHighlightedEmail && !isHighlighted;
@@ -240,7 +235,7 @@ const LeaderboardCard = ({ game, rank, totalPoints, isHighlighted, isWinnersMode
 };
 
 // Winner Card for Winners Mode
-const WinnerCard = ({ game, rank, categoryTitle }) => {
+const WinnerCard = ({ game, rank }) => {
   const styles = getRankStyles(rank);
   const IconComponent = styles.icon;
 
@@ -482,6 +477,9 @@ const WinnersCelebration = () => (
 
 const EurovisionLeaderboard = () => {
   const { value: EUROVISION_POLLING_ENABLED } = useConfig(true, "EUROVISION_POLLING_ENABLED");
+  const { value: EUROVISION_SHOW_WINNERS } = useConfig(true, "EUROVISION_SHOW_WINNERS");
+  // const { value: EUROVISION_HIGHLIGHT, txt: EUROVISION_EMAIL } = useConfig(true, "EUROVISION_HIGHLIGHT");
+
   const [scores, setScores] = useState({
     partyGame: [],
     midWeight: [],
@@ -489,6 +487,30 @@ const EurovisionLeaderboard = () => {
   });
   const [highlightedEmail, setHighlightedEmail] = useState(null);
   const [isWinnersMode, setIsWinnersMode] = useState(false);
+
+  const { data: highlight, isHighlightLoading, highlighterror } = useQuery({
+    queryKey: ['config', 'eurovision'],
+    queryFn: async () => {
+      const response = await fetch(
+        `${import.meta.env.VITE_API_ENDPOINT}/rest/configurations/8`
+      );
+      if (!response.ok) throw new Error('Failed to fetch scores');
+      return response.json();
+    },
+    refetchInterval: 5000,
+    refetchIntervalInBackground: true,
+    enabled: !!EUROVISION_POLLING_ENABLED,
+  });
+
+  useEffect(() => {
+    const { value: EUROVISION_HIGHLIGHT, txt: EUROVISION_EMAIL } = highlight;
+    console.log(highlight, EUROVISION_EMAIL, EUROVISION_HIGHLIGHT)
+    if (EUROVISION_HIGHLIGHT) {
+      setHighlightedEmail(EUROVISION_EMAIL);
+    } else {
+      setHighlightedEmail(null);
+    }
+  }, [highlight])
 
   // Fetch scores with polling
   const { data, isLoading, error } = useQuery({
@@ -505,33 +527,9 @@ const EurovisionLeaderboard = () => {
     enabled: !!EUROVISION_POLLING_ENABLED,
   });
 
-  // Poll for active presenter/mode
-  useQuery({
-    queryKey: ['eurovision-mode'],
-    queryFn: async () => {
-      const response = await fetch(
-        `${import.meta.env.VITE_API_ENDPOINT}/rest/eurovisionmode`
-      );
-      if (!response.ok) throw new Error('Failed to fetch mode');
-      return response.json();
-    },
-    refetchInterval: 2000,
-    refetchIntervalInBackground: true,
-    enabled: !!EUROVISION_POLLING_ENABLED,
-    onSuccess: (modeData) => {
-      // Expected format: { mode: 'normal' | 'highlight' | 'winners', email?: string }
-      if (modeData?.mode === 'winners') {
-        setIsWinnersMode(true);
-        setHighlightedEmail(null);
-      } else if (modeData?.mode === 'highlight' && modeData?.email) {
-        setIsWinnersMode(false);
-        setHighlightedEmail(modeData.email);
-      } else {
-        setIsWinnersMode(false);
-        setHighlightedEmail(null);
-      }
-    },
-  });
+  useEffect(() => {
+    setIsWinnersMode(EUROVISION_SHOW_WINNERS);
+  }, [EUROVISION_SHOW_WINNERS]);
 
   const sortFn = (a, b) => {
     const votes = b.votes - a.votes;
@@ -561,7 +559,7 @@ const EurovisionLeaderboard = () => {
     { key: 'heavyWeight', title: 'Heavy Weight', icon: Crown },
   ];
 
-  if (isLoading) {
+  if (isLoading || isHighlightLoading) {
     return (
       <div className="h-screen flex items-center justify-center bg-background">
         <div className="text-center space-y-4">

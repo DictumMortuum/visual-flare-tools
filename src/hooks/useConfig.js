@@ -19,6 +19,7 @@ const useConfig = (enabled, cfg) => {
     data,
     isLoading,
     value: col.length === 0 ? false : col[0].value,
+    txt: col.length === 0 ? "" : col[0].txt,
   };
 }
 
