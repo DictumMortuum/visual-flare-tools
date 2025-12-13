@@ -101,29 +101,29 @@ const LeaderboardCard = ({ game, rank, totalPoints, isHighlighted, isWinnersMode
       layout
       initial={{ opacity: 0, scale: 0.8, y: 20 }}
       animate={{ 
-        opacity: isGreyedOut ? 0.25 : (isHighlighted ? 1 : (isWinnersMode && rank > 3 ? 0.3 : 1)), 
-        scale: isHighlighted ? 1.08 : (isGreyedOut ? 0.95 : (isWinnersMode && rank > 3 ? 0.9 : 1)), 
+        opacity: isGreyedOut ? 0.2 : 1, 
+        scale: isHighlighted ? 1.05 : (isGreyedOut ? 0.92 : 1), 
         y: 0,
-        filter: isGreyedOut ? 'grayscale(100%) brightness(0.5)' : (isHighlighted ? 'brightness(1.1)' : 'brightness(1)'),
       }}
       exit={{ opacity: 0, scale: 0.8, y: -20 }}
       transition={{
         layout: { type: 'spring', stiffness: 300, damping: 30 },
         opacity: { duration: 0.4 },
         scale: { type: 'spring', stiffness: 400, damping: 25 },
-        filter: { duration: 0.4 },
+      }}
+      style={{
+        filter: isGreyedOut ? 'grayscale(100%) brightness(0.4)' : 'none',
       }}
       className={`
         relative overflow-hidden rounded-xl border-2 
         ${isHighlighted 
           ? 'border-yellow-400 shadow-[0_0_50px_rgba(250,204,21,0.7),0_0_100px_rgba(250,204,21,0.4)] z-20' 
           : isGreyedOut 
-            ? 'border-border/30' 
+            ? 'border-border/20' 
             : `${styles.border} ${styles.glow}`
         }
-        ${isHighlighted ? 'bg-gradient-to-br from-yellow-900/40 via-amber-900/30 to-orange-900/40' : 'bg-card/80'} 
+        ${isHighlighted ? 'bg-gradient-to-br from-yellow-900/60 via-amber-900/50 to-orange-900/60' : 'bg-card/80'} 
         backdrop-blur-sm
-        ${rank <= 3 && !isGreyedOut ? 'scale-100' : isGreyedOut ? '' : 'scale-95 opacity-90'}
         ${isHighlighted ? 'ring-4 ring-yellow-400/60' : ''}
       `}
     >
@@ -147,21 +147,27 @@ const LeaderboardCard = ({ game, rank, totalPoints, isHighlighted, isWinnersMode
         </>
       )}
 
-      {/* Background gradient overlay for top 3 */}
-      {rank <= 3 && !isHighlighted && !isGreyedOut && (
+      {/* Background gradient overlay for top 3 - HIDDEN during highlight mode */}
+      {rank <= 3 && !hasHighlightedEmail && (
         <div className={`absolute inset-0 ${styles.bg} opacity-10`} />
       )}
       
       <div className="relative flex items-center gap-3 p-3">
-        {/* Rank Badge */}
+        {/* Rank Badge - no gold/silver/bronze styling during highlight mode unless highlighted */}
         <div className={`
           flex items-center justify-center w-12 h-12 rounded-xl font-bold text-lg
-          ${isHighlighted ? 'bg-gradient-to-br from-yellow-400 to-amber-500' : rank <= 3 ? styles.bg : 'bg-muted'} 
-          ${isHighlighted || rank <= 3 ? 'text-white' : 'text-foreground'}
+          ${isHighlighted 
+            ? 'bg-gradient-to-br from-yellow-400 to-amber-500 text-white' 
+            : hasHighlightedEmail 
+              ? 'bg-muted text-foreground' 
+              : rank <= 3 
+                ? `${styles.bg} text-white` 
+                : 'bg-muted text-foreground'
+          }
           shadow-lg flex-shrink-0
         `}>
-          {IconComponent && !isHighlighted ? (
-            <IconComponent className={`w-6 h-6 ${rank <= 3 ? 'text-white' : ''}`} />
+          {IconComponent && !isHighlighted && !hasHighlightedEmail ? (
+            <IconComponent className="w-6 h-6 text-white" />
           ) : (
             <span className={isHighlighted ? 'text-xl font-black' : ''}>{rank}</span>
           )}
@@ -179,7 +185,8 @@ const LeaderboardCard = ({ game, rank, totalPoints, isHighlighted, isWinnersMode
             } : {}}
             transition={{ duration: 1.5, repeat: isHighlighted ? Infinity : 0 }}
           />
-          {rank <= 3 && !isHighlighted && (
+          {/* Hide rank badge overlay during highlight mode */}
+          {rank <= 3 && !hasHighlightedEmail && (
             <div className={`absolute -top-1 -right-1 w-5 h-5 rounded-full ${styles.bg} flex items-center justify-center shadow-md`}>
               <span className="text-[10px] font-bold text-white">{rank}</span>
             </div>
@@ -197,13 +204,13 @@ const LeaderboardCard = ({ game, rank, totalPoints, isHighlighted, isWinnersMode
 
         {/* Game Info */}
         <div className="flex-1 min-w-0">
-          <h4 className={`font-bold truncate ${rank <= 3 ? 'text-base' : 'text-sm'} ${isHighlighted ? 'text-yellow-200 text-lg' : ''}`}>
+          <h4 className={`font-bold truncate ${isHighlighted ? 'text-white text-lg drop-shadow-[0_0_10px_rgba(250,204,21,0.8)]' : rank <= 3 ? 'text-base text-foreground' : 'text-sm text-foreground'}`}>
             {game.name || 'Unknown Game'}
           </h4>
           {game.year && (
-            <span className={`text-xs ${isHighlighted ? 'text-yellow-300/80' : 'text-muted-foreground'}`}>{game.year}</span>
+            <span className={`text-xs ${isHighlighted ? 'text-yellow-200' : 'text-muted-foreground'}`}>{game.year}</span>
           )}
-          <div className={`text-sm mt-1 font-medium ${isHighlighted ? 'text-yellow-100 bg-yellow-400/20 px-2 py-0.5 rounded-md inline-block' : 'text-muted-foreground text-xs'}`}>
+          <div className={`text-sm mt-1 font-semibold ${isHighlighted ? 'text-white bg-yellow-500/40 px-2 py-0.5 rounded-md inline-block' : 'text-muted-foreground text-xs'}`}>
             {game.email.map(d => {
               const e = d.split("@");
               return e[0];
@@ -214,8 +221,14 @@ const LeaderboardCard = ({ game, rank, totalPoints, isHighlighted, isWinnersMode
         {/* Points */}
         <div className={`
           flex flex-col items-center justify-center px-3 py-1.5 rounded-lg
-          ${isHighlighted ? 'bg-gradient-to-br from-yellow-400 to-amber-500 text-white' : rank <= 3 ? styles.bg : 'bg-primary/10'}
-          ${!isHighlighted && rank <= 3 ? 'text-white' : !isHighlighted ? 'text-primary' : ''}
+          ${isHighlighted 
+            ? 'bg-gradient-to-br from-yellow-400 to-amber-500 text-white' 
+            : hasHighlightedEmail 
+              ? 'bg-muted text-foreground' 
+              : rank <= 3 
+                ? `${styles.bg} text-white` 
+                : 'bg-primary/10 text-primary'
+          }
           flex-shrink-0
         `}>
           <span className={`font-black ${isHighlighted ? 'text-2xl' : 'text-xl'}`}>{totalPoints}</span>
