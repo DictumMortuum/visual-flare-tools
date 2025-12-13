@@ -385,6 +385,14 @@ const EurovisionNomination = () => {
     }
   }, [votesLoading, myVotes, othersNominations, myNominations, activeTab]);
 
+  React.useEffect(() => {
+    if (EUROVISION_SHOW_VOTES_LIST) {
+      setActiveTab('vote')
+    } else {
+      setActiveTab('nominate')
+    }
+  }, [EUROVISION_SHOW_VOTES_LIST])
+
   const categories = {
     partyGame: 'Party Game',
     midWeight: 'Mid Weight',
