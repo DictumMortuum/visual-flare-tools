@@ -147,10 +147,10 @@ const LeaderboardCard = ({ game, rank, totalPoints, isHighlighted, hasHighlighte
         <div className={`absolute inset-0 ${styles.bg} opacity-10`} />
       )}
       
-      <div className="relative flex items-center gap-3 p-3">
+      <div className="relative flex items-center gap-2 p-2">
         {/* Rank Badge - no gold/silver/bronze styling during highlight mode unless highlighted */}
         <div className={`
-          flex items-center justify-center w-12 h-12 rounded-xl font-bold text-lg
+          flex items-center justify-center w-8 h-8 rounded-lg font-bold text-sm
           ${isHighlighted 
             ? 'bg-gradient-to-br from-yellow-400 to-amber-500 text-white' 
             : hasHighlightedEmail 
@@ -162,9 +162,9 @@ const LeaderboardCard = ({ game, rank, totalPoints, isHighlighted, hasHighlighte
           shadow-lg flex-shrink-0
         `}>
           {IconComponent && !isHighlighted && !hasHighlightedEmail ? (
-            <IconComponent className="w-6 h-6 text-white" />
+            <IconComponent className="w-4 h-4 text-white" />
           ) : (
-            <span className={isHighlighted ? 'text-xl font-black' : ''}>{rank}</span>
+            <span className={isHighlighted ? 'text-base font-black' : ''}>{rank}</span>
           )}
         </div>
 
@@ -173,7 +173,7 @@ const LeaderboardCard = ({ game, rank, totalPoints, isHighlighted, hasHighlighte
           <motion.img
             src={game.flag || '/placeholder.svg'}
             alt={game.name || 'Game'}
-            className={`w-14 h-14 object-cover rounded-lg shadow-md border-2 ${isHighlighted ? 'border-yellow-400/50' : 'border-border'}`}
+            className={`w-10 h-10 object-cover rounded-md shadow-md border ${isHighlighted ? 'border-yellow-400/50' : 'border-border'}`}
             animate={isHighlighted ? { 
               scale: [1, 1.08, 1],
               boxShadow: ['0 0 0 rgba(250,204,21,0)', '0 0 30px rgba(250,204,21,0.6)', '0 0 0 rgba(250,204,21,0)']
@@ -182,30 +182,27 @@ const LeaderboardCard = ({ game, rank, totalPoints, isHighlighted, hasHighlighte
           />
           {/* Hide rank badge overlay during highlight mode */}
           {rank <= 3 && !hasHighlightedEmail && (
-            <div className={`absolute -top-1 -right-1 w-5 h-5 rounded-full ${styles.bg} flex items-center justify-center shadow-md`}>
-              <span className="text-[10px] font-bold text-white">{rank}</span>
+            <div className={`absolute -top-1 -right-1 w-4 h-4 rounded-full ${styles.bg} flex items-center justify-center shadow-md`}>
+              <span className="text-[8px] font-bold text-white">{rank}</span>
             </div>
           )}
           {isHighlighted && (
             <motion.div
-              className="absolute -top-2 -right-2"
+              className="absolute -top-1 -right-1"
               animate={{ rotate: [0, 15, -15, 0], scale: [1, 1.3, 1] }}
               transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 0.5 }}
             >
-              <Sparkles className="w-6 h-6 text-yellow-400 drop-shadow-[0_0_12px_rgba(250,204,21,1)]" />
+              <Sparkles className="w-4 h-4 text-yellow-400 drop-shadow-[0_0_12px_rgba(250,204,21,1)]" />
             </motion.div>
           )}
         </div>
 
         {/* Game Info */}
         <div className="flex-1 min-w-0">
-          <h4 className={`font-bold truncate ${isHighlighted ? 'text-white text-lg drop-shadow-[0_0_10px_rgba(250,204,21,0.8)]' : rank <= 3 ? 'text-base text-foreground' : 'text-sm text-foreground'}`}>
+          <h4 className={`font-bold truncate ${isHighlighted ? 'text-white text-sm drop-shadow-[0_0_10px_rgba(250,204,21,0.8)]' : 'text-xs text-foreground'}`}>
             {game.name || 'Unknown Game'}
           </h4>
-          {game.year && (
-            <span className={`text-xs ${isHighlighted ? 'text-yellow-200' : 'text-muted-foreground'}`}>{game.year}</span>
-          )}
-          <div className={`text-sm mt-1 font-semibold ${isHighlighted ? 'text-white bg-yellow-500/40 px-2 py-0.5 rounded-md inline-block' : 'text-muted-foreground text-xs'}`}>
+          <div className={`text-xs truncate ${isHighlighted ? 'text-white bg-yellow-500/40 px-1 py-0.5 rounded inline-block' : 'text-muted-foreground'}`}>
             {game.email.map(d => {
               const e = d.split("@");
               return e[0];
@@ -215,7 +212,7 @@ const LeaderboardCard = ({ game, rank, totalPoints, isHighlighted, hasHighlighte
 
         {/* Points */}
         <div className={`
-          flex flex-col items-center justify-center px-3 py-1.5 rounded-lg
+          flex flex-col items-center justify-center px-2 py-1 rounded-md
           ${isHighlighted 
             ? 'bg-gradient-to-br from-yellow-400 to-amber-500 text-white' 
             : hasHighlightedEmail 
@@ -226,8 +223,8 @@ const LeaderboardCard = ({ game, rank, totalPoints, isHighlighted, hasHighlighte
           }
           flex-shrink-0
         `}>
-          <span className={`font-black ${isHighlighted ? 'text-2xl' : 'text-xl'}`}>{totalPoints}</span>
-          <span className="text-[10px] uppercase tracking-wider opacity-80">pts</span>
+          <span className={`font-black ${isHighlighted ? 'text-lg' : 'text-base'}`}>{totalPoints}</span>
+          <span className="text-[8px] uppercase tracking-wider opacity-80">pts</span>
         </div>
       </div>
     </motion.div>
@@ -338,29 +335,29 @@ const WinnerCard = ({ game, rank }) => {
 
 const CategoryColumn = ({ title, games, icon: Icon, highlightedEmail, isWinnersMode }) => {
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full min-h-0">
       {/* Category Header */}
       <motion.div 
-        className="flex items-center justify-center gap-2 mb-4 pb-3 border-b-2 border-primary/30"
+        className="flex items-center justify-center gap-2 mb-2 pb-2 border-b border-primary/30 flex-shrink-0"
         animate={isWinnersMode ? { scale: [1, 1.02, 1] } : {}}
         transition={{ duration: 2, repeat: Infinity }}
       >
-        <div className={`p-2 rounded-lg ${isWinnersMode ? 'bg-gradient-to-br from-yellow-400 to-amber-500' : 'bg-primary/20'}`}>
-          <Icon className={`w-5 h-5 ${isWinnersMode ? 'text-white' : 'text-primary'}`} />
+        <div className={`p-1.5 rounded-md ${isWinnersMode ? 'bg-gradient-to-br from-yellow-400 to-amber-500' : 'bg-primary/20'}`}>
+          <Icon className={`w-4 h-4 ${isWinnersMode ? 'text-white' : 'text-primary'}`} />
         </div>
-        <h2 className={`text-xl font-bold tracking-tight ${isWinnersMode ? 'text-yellow-400' : ''}`}>{title}</h2>
+        <h2 className={`text-base font-bold tracking-tight ${isWinnersMode ? 'text-yellow-400' : ''}`}>{title}</h2>
         {isWinnersMode && (
           <motion.div
             animate={{ rotate: [0, 10, -10, 0] }}
             transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 1 }}
           >
-            <PartyPopper className="w-5 h-5 text-yellow-400" />
+            <PartyPopper className="w-4 h-4 text-yellow-400" />
           </motion.div>
         )}
       </motion.div>
 
       {/* Games List */}
-      <div className="flex-1 space-y-2 overflow-hidden">
+      <div className="flex-1 space-y-1 overflow-y-auto min-h-0">
         {isWinnersMode ? (
           // Winners Mode: Show top 3 as large celebration cards
           <div className="flex flex-col items-center justify-center h-full gap-6">
@@ -582,7 +579,7 @@ const EurovisionLeaderboard = () => {
   }
 
   return (
-    <div className={`h-screen w-screen overflow-hidden p-4 transition-colors duration-1000 ${
+    <div className={`h-screen w-screen overflow-auto p-3 transition-colors duration-1000 ${
       isWinnersMode 
         ? 'bg-gradient-to-br from-slate-900 via-purple-900/50 to-slate-900' 
         : 'bg-gradient-to-br from-background via-background to-muted/30'
@@ -622,7 +619,7 @@ const EurovisionLeaderboard = () => {
         />
       </div>
 
-      <div className={`relative h-full flex flex-col max-w-[1600px] mx-auto ${highlightedEmail ? 'pt-24' : ''}`}>
+      <div className={`relative min-h-full flex flex-col w-full ${highlightedEmail ? 'pt-20' : ''}`}>
         {/* Winners Mode Header */}
         <AnimatePresence>
           {isWinnersMode && (
@@ -644,7 +641,7 @@ const EurovisionLeaderboard = () => {
         </AnimatePresence>
 
         {/* Three Columns */}
-        <div className="flex-1 grid grid-cols-3 gap-6 min-h-0">
+        <div className="flex-1 grid grid-cols-3 gap-3 min-h-0">
           {categories.map(({ key, title, icon }) => (
             <CategoryColumn
               key={key}
@@ -658,8 +655,8 @@ const EurovisionLeaderboard = () => {
         </div>
 
         {/* Footer */}
-        <div className="text-center mt-4 flex-shrink-0">
-          <p className={`text-sm ${isWinnersMode ? 'text-yellow-400/60' : 'text-muted-foreground'}`}>
+        <div className="text-center mt-2 flex-shrink-0">
+          <p className={`text-xs ${isWinnersMode ? 'text-yellow-400/60' : 'text-muted-foreground'}`}>
             {isWinnersMode ? 'Congratulations to all winners!' : 'Updates automatically every 5 seconds'}
           </p>
         </div>
