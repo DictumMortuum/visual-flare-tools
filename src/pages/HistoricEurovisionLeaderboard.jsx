@@ -480,7 +480,7 @@ const EurovisionLeaderboard = () => {
     heavyWeight: [],
   });
   const [highlightedEmail] = useState(null);
-  const [isWinnersMode] = useState(true);
+  const [isWinnersMode] = useState(false);
 
   const sortFn = (a, b) => {
     const votes = b.votes - a.votes;
