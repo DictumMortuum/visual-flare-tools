@@ -14,6 +14,7 @@ import { WishlistRouter } from "@/components/tools/general/Wishlist";
 import { TableRouter } from "@/components/tools/boardgame/BoardGameTables";
 import EurovisionLeaderboard from "./pages/EurovisionLeaderboard.jsx";
 import HistoricLeaderboard from "./pages/HistoricEurovisionLeaderboard.jsx";
+import EventGallery from "./pages/EventGallery.jsx";
 import { UserProvider } from './context';
 
 const queryClient = new QueryClient();
@@ -38,6 +39,7 @@ const App = () => (
               </Route>
               <Route path="/eurovision-leaderboard" element={<EurovisionLeaderboard />} />
               <Route path="/leaderboard/:year" element={<HistoricLeaderboard />} />
+              <Route path="/gallery/:year" element={<EventGallery />} />
             </Routes>
           </HashRouter>
         </TooltipProvider>
