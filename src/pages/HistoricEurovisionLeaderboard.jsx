@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Trophy, Crown, Medal, Award, Sparkles, Star, PartyPopper } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import useConfig from '../hooks/useConfig';
+import data_2025 from './2025.json';
 
 const getRankStyles = (rank) => {
   switch (rank) {
@@ -473,60 +472,15 @@ const WinnersCelebration = () => (
 );
 
 const EurovisionLeaderboard = () => {
-  const { value: EUROVISION_POLLING_ENABLED } = useConfig(true, "EUROVISION_POLLING_ENABLED");
-  const { value: EUROVISION_SHOW_WINNERS } = useConfig(true, "EUROVISION_SHOW_WINNERS");
-  // const { value: EUROVISION_HIGHLIGHT, txt: EUROVISION_EMAIL } = useConfig(true, "EUROVISION_HIGHLIGHT");
+  const data = data_2025;
 
   const [scores, setScores] = useState({
     partyGame: [],
     midWeight: [],
     heavyWeight: [],
   });
-  const [highlightedEmail, setHighlightedEmail] = useState(null);
-  const [isWinnersMode, setIsWinnersMode] = useState(false);
-
-  const { data: highlight = [], isHighlightLoading } = useQuery({
-    queryKey: ['config', 'eurovision'],
-    queryFn: async () => {
-      const response = await fetch(
-        `${import.meta.env.VITE_API_ENDPOINT}/rest/configurations/8`
-      );
-      if (!response.ok) throw new Error('Failed to fetch scores');
-      return response.json();
-    },
-    refetchInterval: 5000,
-    refetchIntervalInBackground: true,
-    enabled: !!EUROVISION_POLLING_ENABLED,
-  });
-
-  useEffect(() => {
-    const { value: EUROVISION_HIGHLIGHT, txt: EUROVISION_EMAIL } = highlight;
-    console.log(highlight, EUROVISION_EMAIL, EUROVISION_HIGHLIGHT)
-    if (EUROVISION_HIGHLIGHT) {
-      setHighlightedEmail(EUROVISION_EMAIL);
-    } else {
-      setHighlightedEmail(null);
-    }
-  }, [highlight])
-
-  // Fetch scores with polling
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['eurovision-scores'],
-    queryFn: async () => {
-      const response = await fetch(
-        `${import.meta.env.VITE_API_ENDPOINT}/rest/eurovisionvotes/all`
-      );
-      if (!response.ok) throw new Error('Failed to fetch scores');
-      return response.json();
-    },
-    refetchInterval: 5000,
-    refetchIntervalInBackground: true,
-    enabled: !!EUROVISION_POLLING_ENABLED,
-  });
-
-  useEffect(() => {
-    setIsWinnersMode(EUROVISION_SHOW_WINNERS);
-  }, [EUROVISION_SHOW_WINNERS]);
+  const [highlightedEmail] = useState(null);
+  const [isWinnersMode] = useState(true);
 
   const sortFn = (a, b) => {
     const votes = b.votes - a.votes;
@@ -555,28 +509,6 @@ const EurovisionLeaderboard = () => {
     { key: 'midWeight', title: 'Mid Weight', icon: Medal },
     { key: 'heavyWeight', title: 'Heavy Weight', icon: Crown },
   ];
-
-  if (isLoading || isHighlightLoading) {
-    return (
-      <div className="h-screen flex items-center justify-center bg-background">
-        <div className="text-center space-y-4">
-          <div className="animate-spin w-12 h-12 border-4 border-primary border-t-transparent rounded-full mx-auto" />
-          <p className="text-lg text-muted-foreground">Loading scores...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="h-screen flex items-center justify-center bg-background">
-        <div className="text-center space-y-4">
-          <p className="text-lg text-destructive">Failed to load scores</p>
-          <p className="text-sm text-muted-foreground">{error.message}</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className={`h-screen w-screen overflow-auto pl-10 pr-10 pt-4 transition-colors duration-1000 ${
