@@ -26,7 +26,15 @@ const EventGallery = () => {
         try {
           const manifest = await import(`../gallery/${year}/manifest.json`);
           if (manifest.default) {
-            setMedia(manifest.default);
+            // Ensure paths are properly prefixed with the gallery base path
+            const mediaWithPaths = manifest.default.map(item => ({
+              ...item,
+              // If src doesn't start with http or /, prefix with /gallery/{year}/
+              src: item.src.startsWith('http') || item.src.startsWith('/') 
+                ? item.src 
+                : `/gallery/${year}/${item.src}`
+            }));
+            setMedia(mediaWithPaths);
           }
         } catch (e) {
           console.log('No manifest found for year', year);
