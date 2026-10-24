@@ -6,7 +6,8 @@ import {
   Timer,
   Users,
   User,
-  Trophy
+  Trophy,
+  Repeat
 } from "lucide-react";
 
 export const toolsList = [
@@ -51,6 +52,13 @@ export const toolsList = [
     description: "Nominate your favorite games for the Eurovision Boardgame Competition",
     category: "boardgames",
     icon: <Trophy className="h-5 w-5" />,
+  },
+  {
+    id: "trade",
+    title: "Trade",
+    description: "Δήλωσε τα παιχνίδια που φέρνεις για ανταλλαγή στο event και δες τι θα φέρουν οι άλλοι",
+    category: "boardgames",
+    icon: <Repeat className="h-5 w-5" />,
   },
   {
     id: "wishlist",
