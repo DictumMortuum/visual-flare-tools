@@ -129,7 +129,13 @@ const GameTrade = () => {
         }),
       });
       if (!rs.ok) throw new Error("save failed");
-      return rs.json();
+      const saved = await rs.json();
+      try {
+        await fetch(`${import.meta.env.VITE_APP_ENDPOINT}/boardgames/info/${game.id}`);
+      } catch (e) {
+        console.warn("metadata refresh failed", e);
+      }
+      return saved;
     },
     onSuccess: () => {
       toast.success("Το παιχνίδι προστέθηκε!");
