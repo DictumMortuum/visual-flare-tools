@@ -158,6 +158,7 @@ const GameTrade = () => {
       toast.success("Το παιχνίδι προστέθηκε!");
       setGame(null); setNotes(""); setPickerKey(k => k + 1);
       qc.invalidateQueries({ queryKey: ["trades"] });
+      qc.invalidateQueries({ queryKey: ["boardgame"] });
     },
     onError: () => toast.error("Δεν ήταν δυνατή η αποθήκευση"),
   });
