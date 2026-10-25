@@ -61,15 +61,31 @@ const GamePicker = ({ selected, onSelect }) => {
   );
 };
 
-const TradeCard = ({ trade, mine, onDelete, deleting }) => (
+const useBoardgame = (id) => useQuery({
+  queryKey: ["boardgame", id],
+  queryFn: async () => {
+    const rs = await fetch(`${import.meta.env.VITE_APP_ENDPOINT}/rest/boardgames/${id}`);
+    if (!rs.ok) throw new Error("fetch failed");
+    return rs.json();
+  },
+  enabled: !!id,
+  staleTime: 5 * 60 * 1000,
+});
+
+const TradeCard = ({ trade, mine, onDelete, deleting }) => {
+  const { data: bg } = useBoardgame(trade.boardgame_id);
+  const image = bg?.square200;
+  const name = bg?.name || trade.name;
+  const year = bg?.year;
+  return (
   <Card className="overflow-hidden flex flex-col hover:shadow-lg transition-shadow">
     <div className="flex gap-3 p-3">
-      {trade.image
-        ? <img src={trade.image} alt={trade.name} className="w-20 h-20 rounded-md object-cover flex-shrink-0" />
+      {image
+        ? <img src={image} alt={name} className="w-20 h-20 rounded-md object-cover flex-shrink-0" />
         : <div className="w-20 h-20 rounded-md bg-muted flex items-center justify-center flex-shrink-0"><Package className="h-6 w-6 text-muted-foreground" /></div>}
       <div className="min-w-0 flex-1">
-        <div className="font-semibold leading-tight">{trade.name}</div>
-        {trade.year ? <div className="text-xs text-muted-foreground">{trade.year}</div> : null}
+        <div className="font-semibold leading-tight">{name}</div>
+        {year ? <div className="text-xs text-muted-foreground">{year}</div> : null}
         {trade.condition && <Badge variant="secondary" className="mt-2">{trade.condition}</Badge>}
       </div>
     </div>
@@ -92,7 +108,8 @@ const TradeCard = ({ trade, mine, onDelete, deleting }) => (
       </div>
     </div>
   </Card>
-);
+  );
+};
 
 const GameTrade = () => {
   const { state: { user } } = useContext(UserContext);
