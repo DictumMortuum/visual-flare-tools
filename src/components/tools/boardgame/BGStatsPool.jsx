@@ -78,7 +78,7 @@ const BGStatsPool = () => {
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ["community_stats", YEAR],
     queryFn: async () => {
-      const r = await fetch(API);
+      const r = await fetch(`${API}?year=${YEAR}`);
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       const all = await r.json();
       return (all || []).filter((x) => Number(x.year) === YEAR);
