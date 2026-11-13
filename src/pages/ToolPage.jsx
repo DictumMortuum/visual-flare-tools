@@ -17,6 +17,7 @@ import LFG from "@/components/tools/boardgame/LFG";
 import PlayerProfile from "@/components/tools/boardgame/PlayerProfile";
 import EurovisionNomination from "@/components/tools/boardgame/EurovisionNomination";
 import GameTrade from "@/components/tools/boardgame/GameTrade";
+import BGStatsPool from "@/components/tools/boardgame/BGStatsPool";
 import { useNavigate } from 'react-router-dom';
 
 const ToolPage = () => {
@@ -97,6 +98,8 @@ const ToolPage = () => {
         return <EurovisionNomination />;
       case 'trade':
         return <GameTrade />;
+      case 'bgstats':
+        return <BGStatsPool />;
       case 'wishlist':
         return <Wishlist email={user.email} />;
       default:

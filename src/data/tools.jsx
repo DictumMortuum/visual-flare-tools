@@ -1,6 +1,7 @@
 
 import {
   Bookmark,
+  BarChart3,
   Table,
   Search,
   Timer,
@@ -59,6 +60,13 @@ export const toolsList = [
     description: "Δήλωσε τα παιχνίδια που φέρνεις για ανταλλαγή στο event και δες τι θα φέρουν οι άλλοι",
     category: "boardgames",
     icon: <Repeat className="h-5 w-5" />,
+  },
+  {
+    id: "bgstats",
+    title: "BGStats Pool",
+    description: "Ανέβασε το BGStats export σου και δες τι παίζει η κοινότητα φέτος",
+    category: "boardgames",
+    icon: <BarChart3 className="h-5 w-5" />,
   },
   {
     id: "wishlist",
