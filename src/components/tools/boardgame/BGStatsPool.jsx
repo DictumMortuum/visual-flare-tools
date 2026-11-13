@@ -2,12 +2,12 @@ import React, { useState, useContext, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Upload, Loader2, Clock, Hash, Sparkles, Gamepad2, Users, CalendarDays } from "lucide-react";
+import { Upload, Loader2, Clock, Hash, Sparkles, Gamepad2, Users, CalendarDays, Scale } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell, PieChart, Pie, Legend } from "recharts";
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { UserContext } from '@/context';
-import { aggregateBGStats, mergeSubmissions, metadataStats } from '@/lib/bgstats';
+import { aggregateBGStats, mergeSubmissions, metadataStats, gameWeight } from '@/lib/bgstats';
 import backupGuide from '@/assets/bgstats-backup-guide.jpg.asset.json';
 
 const API = `${import.meta.env.VITE_APP_ENDPOINT}/rest/community_stats`;
@@ -60,13 +60,14 @@ const StatsView = ({ stats, community }) => {
   const hasMeta = meta.covered > 0;
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-3">
         {community && <Kpi i={0} icon={<Users className="h-4 w-4" />} label="Συμμετέχοντες" value={stats.contributors} />}
         <Kpi i={1} icon={<Hash className="h-4 w-4" />} label="Παρτίδες" value={stats.total_plays.toLocaleString()} />
         <Kpi i={2} icon={<Gamepad2 className="h-4 w-4" />} label="Διαφορετικά παιχνίδια" value={stats.unique_games} />
         <Kpi i={3} icon={<Sparkles className="h-4 w-4" />} label={community ? "Νέα παιχνίδια (σύνολο)" : "Νέα παιχνίδια"} value={stats.new_games} />
         <Kpi i={4} icon={<Clock className="h-4 w-4" />} label="Χρόνος παιχνιδιού" value={hours(stats.total_duration_min)} />
         {meta.avgYear && <Kpi i={5} icon={<CalendarDays className="h-4 w-4" />} label="Μέσο έτος έκδοσης" value={meta.avgYear} />}
+        {meta.avgWeight && <Kpi i={0} icon={<Scale className="h-4 w-4" />} label="Μέσο BGG weight" value={`${meta.avgWeight.toFixed(2)} / 5`} />}
       </div>
       <div className="grid md:grid-cols-2 gap-4">
         <ChartCard title="Δραστηριότητα ανά μήνα"><Bars data={timeline} /></ChartCard>
@@ -78,6 +79,7 @@ const StatsView = ({ stats, community }) => {
             <ChartCard title="Συνεργατικά ή ανταγωνιστικά"><Donut data={meta.mode} /></ChartCard>
             <ChartCard title="Παιχνίδια που παίζονται solo"><Donut data={meta.solo} offset={2} /></ChartCard>
             <ChartCard title="Διάρκεια παιχνιδιού (κουτί)"><Bars data={meta.length} /></ChartCard>
+            {meta.avgWeight && <ChartCard title="Πολυπλοκότητα (BGG weight)"><Bars data={meta.weight} /></ChartCard>}
             <ChartCard title="Έκδοση ανά δεκαετία"><Bars data={meta.decades} /></ChartCard>
             <ChartCard title="Υποστήριξη αριθμού παικτών"><Bars data={meta.support} dataKey="games" name="Παιχνίδια" /></ChartCard>
           </div>
@@ -103,6 +105,7 @@ const StatsView = ({ stats, community }) => {
                       <span className="truncate font-medium">{g.name}</span>
                       {!community && g.is_new && <Badge variant="secondary">Νέο</Badge>}
                       {community && g.new_for > 0 && <Badge variant="secondary">νέο για {g.new_for}</Badge>}
+                      {gameWeight(b) && <Badge variant="outline" style={{ borderColor: NORD[[2, 3, 5, 1][Math.min(3, Math.floor(gameWeight(b)) - 1)] ?? 2], color: NORD[[2, 3, 5, 1][Math.min(3, Math.floor(gameWeight(b)) - 1)] ?? 2] }}>Weight {gameWeight(b).toFixed(2)}</Badge>}
                       {b?.cooperative && <Badge variant="outline" style={{ borderColor: NORD[2], color: NORD[2] }}>Co-op</Badge>}
                       {b?.solitaire && <Badge variant="outline" style={{ borderColor: NORD[4], color: NORD[4] }}>Solo</Badge>}
                     </div>
