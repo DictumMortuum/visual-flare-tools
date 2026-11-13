@@ -38,6 +38,8 @@
     --radius: 0.75rem;
 
     /* Nord palette for charts */
+    --bgg-green: 146 56% 34%;
+    --bgg-green-dark: 146 60% 22%;
     --nord-frost-1: 179 25% 65%;
     --nord-frost-2: 193 43% 67%;
     --nord-frost-3: 210 34% 63%;

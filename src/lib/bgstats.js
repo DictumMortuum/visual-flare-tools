@@ -88,6 +88,14 @@ export const gameWeight = (b) => {
   return w > 0 ? w : null;
 };
 
+// BGG rating (1–10); returns null when missing.
+export const gameRating = (b) => {
+  const r = Number(b?.bgg_rating ?? b?.bgg_average_rating);
+  return r > 0 ? r : null;
+};
+// Round to one decimal place.
+export const round1 = (n) => (Math.round(n * 10) / 10).toFixed(1);
+
 export const metadataStats = (games = []) => {
   const withMeta = games.filter((g) => g.boardgame);
   const decades = {}, mechanics = {}, categories = {};
@@ -96,12 +104,19 @@ export const metadataStats = (games = []) => {
   const length = { "≤30'": 0, "31–60'": 0, "61–120'": 0, "120'+": 0 };
   const support = { "1": 0, "2": 0, "3": 0, "4": 0, "5": 0, "6+": 0 };
   const weight = { "Ελαφριά (1–2)": 0, "Μεσαία-ελαφριά (2–3)": 0, "Μεσαία-βαριά (3–4)": 0, "Βαριά (4–5)": 0 };
+  const rating = { "< 6.0": 0, "6.0–6.9": 0, "7.0–7.9": 0, "≥ 8.0": 0 };
+  let rSum = 0, rPlays = 0;
   let yearSum = 0, yearPlays = 0, wSum = 0, wPlays = 0;
   withMeta.forEach(({ plays, boardgame: b }) => {
     if (b.year > 0) {
       const d = b.year < 1980 ? "<1980" : `${Math.floor(b.year / 10) * 10}s`;
       decades[d] = (decades[d] || 0) + plays;
       yearSum += b.year * plays; yearPlays += plays;
+    }
+    const r = gameRating(b);
+    if (r) {
+      rSum += r * plays; rPlays += plays;
+      rating[r < 6 ? "< 6.0" : r < 7 ? "6.0–6.9" : r < 8 ? "7.0–7.9" : "≥ 8.0"] += plays;
     }
     const w = gameWeight(b);
     if (w) {
@@ -124,6 +139,8 @@ export const metadataStats = (games = []) => {
     covered: withMeta.length,
     avgYear: yearPlays ? Math.round(yearSum / yearPlays) : null,
     avgWeight: wPlays ? wSum / wPlays : null,
+    avgRating: rPlays ? rSum / rPlays : null,
+    rating: Object.entries(rating).map(([name, plays]) => ({ name, plays })),
     weight: Object.entries(weight).map(([name, plays]) => ({ name, plays })),
     decades: Object.entries(decades).sort((a, b) => order(a[0]) - order(b[0])).map(([name, plays]) => ({ name, plays })),
     mode: Object.entries(mode).map(([name, value]) => ({ name, value })),
