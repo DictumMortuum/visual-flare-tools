@@ -1,0 +1,4 @@
+- [x] Improve BGStats metric cards with Nord-colored backgrounds and aligned, visible icons.
+- [x] Remove the personal statistics view while keeping file selection and pool submission.
+- [x] Add BGStats backup instructions and the provided screenshot.
+- [x] Verify the updated community page and upload selection on desktop and mobile.
