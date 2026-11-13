@@ -20,9 +20,10 @@ const NORD = ["frost-4", "red", "green", "yellow", "purple", "orange", "frost-2"
 const tip = { contentStyle: { background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 8 } };
 
 const Kpi = ({ icon, label, value, i = 0 }) => (
-  <Card className={`bgstats-kpi ${["bgstats-kpi-0", "bgstats-kpi-1", "bgstats-kpi-2", "bgstats-kpi-3", "bgstats-kpi-4", "bgstats-kpi-5"][i]}`}><CardContent className="p-4 flex items-center justify-between gap-3 min-h-28">
-    <div className="min-w-0"><div className="text-xs font-medium leading-5">{label}</div><div className="text-xl font-bold mt-1 break-words">{value}</div></div>
-    <div className="bgstats-kpi-icon flex shrink-0 items-center justify-center h-10 w-10 rounded-md" aria-hidden="true">{icon}</div>
+  <Card className={`bgstats-kpi ${["bgstats-kpi-0", "bgstats-kpi-1", "bgstats-kpi-2", "bgstats-kpi-3", "bgstats-kpi-4", "bgstats-kpi-5"][i]}`}><CardContent className="relative h-full min-h-32 p-4">
+    <div className="min-w-0 pr-12"><div className="text-xs font-medium leading-5 break-words">{label}</div></div>
+    <div className="text-xl font-bold mt-3 break-words">{value}</div>
+    <div className="bgstats-kpi-icon absolute top-4 right-4 flex items-center justify-center h-10 w-10 rounded-md" aria-hidden="true">{icon}</div>
   </CardContent></Card>
 );
 
