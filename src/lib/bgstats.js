@@ -67,7 +67,8 @@ export const mergeSubmissions = (rows = []) => {
     Object.entries(parse(r.player_counts) || {}).forEach(([k, v]) => (pool.player_counts[k] = (pool.player_counts[k] || 0) + v));
     (parse(r.games) || []).forEach((g) => {
       const key = g.bgg_id || g.name;
-      const cur = games.get(key) || { bgg_id: g.bgg_id, name: g.name, plays: 0, duration_min: 0, players: 0, new_for: 0 };
+      const cur = games.get(key) || { bgg_id: g.bgg_id, name: g.name, plays: 0, duration_min: 0, players: 0, new_for: 0, boardgame: null };
+      if (!cur.boardgame && g.boardgame) cur.boardgame = g.boardgame;
       cur.plays += g.plays; cur.duration_min += g.duration_min; cur.players += 1;
       if (g.is_new) cur.new_for += 1;
       games.set(key, cur);
@@ -76,4 +77,46 @@ export const mergeSubmissions = (rows = []) => {
   pool.games = [...games.values()].sort((a, b) => b.plays - a.plays);
   pool.unique_games = pool.games.length;
   return pool;
+};
+
+// Breakdowns based on boardgame metadata (weighted by plays). Games without metadata are skipped.
+const topN = (obj, n) => Object.entries(obj).sort((a, b) => b[1] - a[1]).slice(0, n).map(([name, plays]) => ({ name, plays }));
+
+export const metadataStats = (games = []) => {
+  const withMeta = games.filter((g) => g.boardgame);
+  const decades = {}, mechanics = {}, categories = {};
+  const mode = { "Ανταγωνιστικά": 0, "Συνεργατικά": 0 };
+  const solo = { "Παίζεται solo": 0, "Μόνο πολυπαικτικά": 0 };
+  const length = { "≤30'": 0, "31–60'": 0, "61–120'": 0, "120'+": 0 };
+  const support = { "1": 0, "2": 0, "3": 0, "4": 0, "5": 0, "6+": 0 };
+  let yearSum = 0, yearPlays = 0;
+  withMeta.forEach(({ plays, boardgame: b }) => {
+    if (b.year > 0) {
+      const d = b.year < 1980 ? "<1980" : `${Math.floor(b.year / 10) * 10}s`;
+      decades[d] = (decades[d] || 0) + plays;
+      yearSum += b.year * plays; yearPlays += plays;
+    }
+    mode[b.cooperative ? "Συνεργατικά" : "Ανταγωνιστικά"] += plays;
+    solo[b.solitaire || b.min_players === 1 ? "Παίζεται solo" : "Μόνο πολυπαικτικά"] += plays;
+    const t = b.max_play_time || b.min_play_time;
+    if (t) length[t <= 30 ? "≤30'" : t <= 60 ? "31–60'" : t <= 120 ? "61–120'" : "120'+"] += plays;
+    if (b.min_players && b.max_players) {
+      ["1", "2", "3", "4", "5"].forEach((k) => { if (b.min_players <= +k && b.max_players >= +k) support[k] += 1; });
+      if (b.max_players >= 6) support["6+"] += 1;
+    }
+    (b.mechanics || []).forEach((m) => (mechanics[m] = (mechanics[m] || 0) + plays));
+    (b.categories || []).forEach((c) => (categories[c] = (categories[c] || 0) + plays));
+  });
+  const order = (k) => (k === "<1980" ? 0 : parseInt(k));
+  return {
+    covered: withMeta.length,
+    avgYear: yearPlays ? Math.round(yearSum / yearPlays) : null,
+    decades: Object.entries(decades).sort((a, b) => order(a[0]) - order(b[0])).map(([name, plays]) => ({ name, plays })),
+    mode: Object.entries(mode).map(([name, value]) => ({ name, value })),
+    solo: Object.entries(solo).map(([name, value]) => ({ name, value })),
+    length: Object.entries(length).map(([name, plays]) => ({ name, plays })),
+    support: Object.entries(support).map(([name, games]) => ({ name: `${name}p`, games })),
+    mechanics: topN(mechanics, 10),
+    categories: topN(categories, 10),
+  };
 };

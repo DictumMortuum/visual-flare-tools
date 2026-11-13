@@ -3,12 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Upload, Loader2, Clock, Hash, Sparkles, Gamepad2, Users } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
+import { Upload, Loader2, Clock, Hash, Sparkles, Gamepad2, Users, CalendarDays } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell, PieChart, Pie, Legend } from "recharts";
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { UserContext } from '@/context';
-import { aggregateBGStats, mergeSubmissions } from '@/lib/bgstats';
+import { aggregateBGStats, mergeSubmissions, metadataStats } from '@/lib/bgstats';
 
 const API = `${import.meta.env.VITE_APP_ENDPOINT}/rest/community_stats`;
 const YEAR = new Date().getFullYear();
@@ -16,52 +16,104 @@ const MONTHS = ["Ιαν", "Φεβ", "Μαρ", "Απρ", "Μάι", "Ιούν", "�
 
 const hours = (m) => `${Math.round(m / 60).toLocaleString()} ώρες`;
 
-const Kpi = ({ icon, label, value }) => (
+const NORD = ["frost-4", "red", "green", "yellow", "purple", "orange", "frost-2", "frost-1", "frost-3"].map((k) => `hsl(var(--nord-${k}))`);
+const tip = { contentStyle: { background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 8 } };
+
+const Kpi = ({ icon, label, value, i = 0 }) => (
   <Card><CardContent className="p-4 flex items-center gap-3">
-    <div className="p-2 rounded-md bg-primary/10 text-primary">{icon}</div>
+    <div className="p-2 rounded-md" style={{ color: NORD[i], background: `color-mix(in srgb, ${NORD[i]} 15%, transparent)` }}>{icon}</div>
     <div><div className="text-xs text-muted-foreground">{label}</div><div className="text-xl font-bold">{value}</div></div>
   </CardContent></Card>
+);
+
+const ChartCard = ({ title, children, tall }) => (
+  <Card><CardHeader><CardTitle className="text-base">{title}</CardTitle></CardHeader>
+    <CardContent className={tall ? "h-96" : "h-64"}><ResponsiveContainer>{children}</ResponsiveContainer></CardContent></Card>
+);
+
+const Bars = ({ data, dataKey = "plays", name = "Παρτίδες", vertical, ...size }) => (
+  <BarChart {...size} data={data} layout={vertical ? "vertical" : "horizontal"} margin={vertical ? { left: 20 } : undefined}>
+    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+    {vertical ? <><XAxis type="number" fontSize={12} /><YAxis type="category" dataKey="name" fontSize={11} width={140} interval={0} /></>
+      : <><XAxis dataKey="name" fontSize={12} /><YAxis fontSize={12} /></>}
+    <Tooltip {...tip} cursor={{ fill: "hsl(var(--muted))" }} />
+    <Bar dataKey={dataKey} name={name} radius={vertical ? [0, 4, 4, 0] : [4, 4, 0, 0]}>
+      {data.map((_, i) => <Cell key={i} fill={NORD[i % NORD.length]} />)}
+    </Bar>
+  </BarChart>
+);
+
+const Donut = ({ data, offset = 0, ...size }) => (
+  <PieChart {...size}>
+    <Pie data={data} dataKey="value" nameKey="name" innerRadius={50} outerRadius={85} paddingAngle={3}>
+      {data.map((_, i) => <Cell key={i} fill={NORD[(i + offset) % NORD.length]} />)}
+    </Pie>
+    <Tooltip {...tip} /><Legend />
+  </PieChart>
 );
 
 const StatsView = ({ stats, community }) => {
   const timeline = MONTHS.map((m, i) => ({ name: m, plays: stats.timeline[String(i + 1).padStart(2, "0")] || 0 }));
   const counts = ["1", "2", "3", "4", "5+"].map((k) => ({ name: `${k}p`, plays: stats.player_counts[k] || 0 }));
+  const meta = metadataStats(stats.games);
+  const hasMeta = meta.covered > 0;
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-        {community && <Kpi icon={<Users className="h-4 w-4" />} label="Συμμετέχοντες" value={stats.contributors} />}
-        <Kpi icon={<Hash className="h-4 w-4" />} label="Παρτίδες" value={stats.total_plays.toLocaleString()} />
-        <Kpi icon={<Gamepad2 className="h-4 w-4" />} label="Διαφορετικά παιχνίδια" value={stats.unique_games} />
-        <Kpi icon={<Sparkles className="h-4 w-4" />} label={community ? "Νέα παιχνίδια (σύνολο)" : "Νέα παιχνίδια"} value={stats.new_games} />
-        <Kpi icon={<Clock className="h-4 w-4" />} label="Χρόνος παιχνιδιού" value={hours(stats.total_duration_min)} />
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+        {community && <Kpi i={0} icon={<Users className="h-4 w-4" />} label="Συμμετέχοντες" value={stats.contributors} />}
+        <Kpi i={1} icon={<Hash className="h-4 w-4" />} label="Παρτίδες" value={stats.total_plays.toLocaleString()} />
+        <Kpi i={2} icon={<Gamepad2 className="h-4 w-4" />} label="Διαφορετικά παιχνίδια" value={stats.unique_games} />
+        <Kpi i={3} icon={<Sparkles className="h-4 w-4" />} label={community ? "Νέα παιχνίδια (σύνολο)" : "Νέα παιχνίδια"} value={stats.new_games} />
+        <Kpi i={4} icon={<Clock className="h-4 w-4" />} label="Χρόνος παιχνιδιού" value={hours(stats.total_duration_min)} />
+        {meta.avgYear && <Kpi i={5} icon={<CalendarDays className="h-4 w-4" />} label="Μέσο έτος έκδοσης" value={meta.avgYear} />}
       </div>
       <div className="grid md:grid-cols-2 gap-4">
-        <Card><CardHeader><CardTitle className="text-base">Δραστηριότητα ανά μήνα</CardTitle></CardHeader>
-          <CardContent className="h-64"><ResponsiveContainer><BarChart data={timeline}>
-            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" /><XAxis dataKey="name" fontSize={12} /><YAxis fontSize={12} /><Tooltip />
-            <Bar dataKey="plays" name="Παρτίδες" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-          </BarChart></ResponsiveContainer></CardContent></Card>
-        <Card><CardHeader><CardTitle className="text-base">Αριθμός παικτών</CardTitle></CardHeader>
-          <CardContent className="h-64"><ResponsiveContainer><BarChart data={counts}>
-            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" /><XAxis dataKey="name" fontSize={12} /><YAxis fontSize={12} /><Tooltip />
-            <Bar dataKey="plays" name="Παρτίδες" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-          </BarChart></ResponsiveContainer></CardContent></Card>
+        <ChartCard title="Δραστηριότητα ανά μήνα"><Bars data={timeline} /></ChartCard>
+        <ChartCard title="Αριθμός παικτών ανά παρτίδα"><Bars data={counts} /></ChartCard>
       </div>
+      {hasMeta && (
+        <>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <ChartCard title="Συνεργατικά ή ανταγωνιστικά"><Donut data={meta.mode} /></ChartCard>
+            <ChartCard title="Παιχνίδια που παίζονται solo"><Donut data={meta.solo} offset={2} /></ChartCard>
+            <ChartCard title="Διάρκεια παιχνιδιού (κουτί)"><Bars data={meta.length} /></ChartCard>
+            <ChartCard title="Έκδοση ανά δεκαετία"><Bars data={meta.decades} /></ChartCard>
+            <ChartCard title="Υποστήριξη αριθμού παικτών"><Bars data={meta.support} dataKey="games" name="Παιχνίδια" /></ChartCard>
+          </div>
+          <div className="grid md:grid-cols-2 gap-4">
+            <ChartCard tall title="Κορυφαίοι μηχανισμοί"><Bars data={meta.mechanics} vertical /></ChartCard>
+            <ChartCard tall title="Κορυφαίες κατηγορίες"><Bars data={meta.categories} vertical /></ChartCard>
+          </div>
+          <p className="text-xs text-muted-foreground">Τα στατιστικά έκδοσης, παικτών, διάρκειας και μηχανισμών βασίζονται σε {meta.covered} από {stats.games.length} παιχνίδια με διαθέσιμα στοιχεία, σταθμισμένα με τις παρτίδες.</p>
+        </>
+      )}
       <Card><CardHeader><CardTitle className="text-base">Τι παίχτηκε</CardTitle></CardHeader>
         <CardContent><div className="divide-y">
-          {stats.games.slice(0, 30).map((g, i) => (
-            <div key={(g.bgg_id || g.name) + i} className="flex items-center justify-between py-2 gap-2">
-              <div className="flex items-center gap-2 min-w-0">
-                <span className="text-muted-foreground w-6 text-right text-sm">{i + 1}</span>
-                <span className="truncate">{g.name}</span>
-                {!community && g.is_new && <Badge variant="secondary">Νέο</Badge>}
-                {community && g.new_for > 0 && <Badge variant="secondary">νέο για {g.new_for}</Badge>}
+          {stats.games.slice(0, 30).map((g, i) => {
+            const b = g.boardgame;
+            return (
+              <div key={(g.bgg_id || g.name) + i} className="flex items-center justify-between py-2 gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className="text-muted-foreground w-6 text-right text-sm">{i + 1}</span>
+                  {b?.square200 ? <img src={b.square200} alt={g.name} loading="lazy" className="h-10 w-10 rounded object-cover" />
+                    : <div className="h-10 w-10 rounded bg-muted" />}
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="truncate font-medium">{g.name}</span>
+                      {!community && g.is_new && <Badge variant="secondary">Νέο</Badge>}
+                      {community && g.new_for > 0 && <Badge variant="secondary">νέο για {g.new_for}</Badge>}
+                      {b?.cooperative && <Badge variant="outline" style={{ borderColor: NORD[2], color: NORD[2] }}>Co-op</Badge>}
+                      {b?.solitaire && <Badge variant="outline" style={{ borderColor: NORD[4], color: NORD[4] }}>Solo</Badge>}
+                    </div>
+                    {b && <div className="text-xs text-muted-foreground">{[b.year > 0 && b.year, b.min_players && `${b.min_players}–${b.max_players} παίκτες`, b.max_play_time && `${b.min_play_time}–${b.max_play_time}'`].filter(Boolean).join(" · ")}</div>}
+                  </div>
+                </div>
+                <div className="text-sm text-muted-foreground whitespace-nowrap">
+                  {g.plays} παρτίδες{community ? ` · ${g.players} παίκτες` : ""}{g.duration_min ? ` · ${hours(g.duration_min)}` : ""}
+                </div>
               </div>
-              <div className="text-sm text-muted-foreground whitespace-nowrap">
-                {g.plays} παρτίδες{community ? ` · ${g.players} παίκτες` : ""}{g.duration_min ? ` · ${hours(g.duration_min)}` : ""}
-              </div>
-            </div>
-          ))}
+            );
+          })}
           {stats.games.length === 0 && <p className="text-muted-foreground text-sm py-4">Δεν υπάρχουν παρτίδες για το {YEAR}.</p>}
         </div></CardContent></Card>
     </div>

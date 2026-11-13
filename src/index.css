@@ -36,6 +36,17 @@
     --ring: 222 47% 11%;
 
     --radius: 0.75rem;
+
+    /* Nord palette for charts */
+    --nord-frost-1: 179 25% 65%;
+    --nord-frost-2: 193 43% 67%;
+    --nord-frost-3: 210 34% 63%;
+    --nord-frost-4: 213 32% 52%;
+    --nord-red: 354 42% 56%;
+    --nord-orange: 14 51% 63%;
+    --nord-yellow: 40 71% 73%;
+    --nord-green: 92 28% 65%;
+    --nord-purple: 311 20% 63%;
   }
 
   .dark {
