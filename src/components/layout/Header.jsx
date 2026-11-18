@@ -31,11 +31,11 @@ const Header = ({ email, dispatch }) => {
             </Link>
           </nav>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4 min-w-0">
           <ThemeToggle />
           {email ? (
-            <div className="flex items-center gap-4">
-              <span className="text-sm">Welcome, {email}</span>
+            <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+              <span className="hidden sm:block text-sm truncate max-w-64" title={email}>Welcome, {email}</span>
               <Button
                 variant="outline"
                 size="sm"

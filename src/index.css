@@ -133,4 +133,16 @@
   .text-balance {
     text-wrap: balance;
   }
+  .tier-game { width: 68px; height: 68px; flex: 0 0 68px; }
+  .tier-label { background: hsl(var(--tier-color)); color: hsl(var(--stats-card-foreground)); }
+  .tier-color-10 { --tier-color: var(--nord-red); }
+  .tier-color-9 { --tier-color: var(--nord-orange); }
+  .tier-color-8 { --tier-color: var(--nord-yellow); }
+  .tier-color-7 { --tier-color: var(--nord-green); }
+  .tier-color-6 { --tier-color: var(--nord-frost-1); }
+  .tier-color-5 { --tier-color: var(--nord-frost-2); }
+  .tier-color-4 { --tier-color: var(--nord-frost-3); }
+  .tier-color-3 { --tier-color: var(--nord-frost-4); }
+  .tier-color-2 { --tier-color: var(--nord-purple); }
+  .tier-color-1 { --tier-color: var(--nord-red); }
 }

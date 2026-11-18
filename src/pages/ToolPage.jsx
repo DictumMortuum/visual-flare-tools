@@ -18,6 +18,7 @@ import PlayerProfile from "@/components/tools/boardgame/PlayerProfile";
 import EurovisionNomination from "@/components/tools/boardgame/EurovisionNomination";
 import GameTrade from "@/components/tools/boardgame/GameTrade";
 import BGStatsPool from "@/components/tools/boardgame/BGStatsPool";
+import TierList from "@/components/tools/boardgame/TierList";
 import { useNavigate } from 'react-router-dom';
 
 const ToolPage = () => {
@@ -100,6 +101,8 @@ const ToolPage = () => {
         return <GameTrade />;
       case 'bgstats':
         return <BGStatsPool />;
+      case 'tierlist':
+        return <TierList />;
       case 'wishlist':
         return <Wishlist email={user.email} />;
       default:

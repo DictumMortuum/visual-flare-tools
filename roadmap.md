@@ -2,3 +2,6 @@
 - [x] Remove the personal statistics view while keeping file selection and pool submission.
 - [x] Add BGStats backup instructions and the provided screenshot.
 - [x] Verify the updated community page and upload selection on desktop and mobile.
+- [x] Add BGG Top 100 tier board with drag-and-drop, search and accessible placement controls.
+- [x] Load and save each user's tier list through extapi, preserving unsaved drafts.
+- [x] Add PNG export (titles instead of covers restricted by BGG), test ranking rules and verify desktop/mobile flows.

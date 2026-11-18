@@ -69,6 +69,13 @@ export const toolsList = [
     icon: <BarChart3 className="h-5 w-5" />,
   },
   {
+    id: "tierlist",
+    title: "BGG Top 100 Tier List",
+    description: "Η προσωπική σου κατάταξη των κορυφαίων 100 παιχνιδιών του BoardGameGeek",
+    category: "boardgames",
+    icon: <Trophy className="h-5 w-5" />,
+  },
+  {
     id: "wishlist",
     title: "Wishlist",
     description: "Create a wishlist of items and let others reserve them for you",
