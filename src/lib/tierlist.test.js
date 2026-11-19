@@ -26,3 +26,15 @@ test('Saved tier IDs are normalized and cannot appear in multiple tiers', () => 
   assert.deepEqual(tiers[10], [224517]);
   assert.deepEqual(tiers[9], [161936]);
 });
+import { combineTierlists } from './tierlist.js';
+
+test('Combined ranking averages tiers and earlier position within a tier ranks higher', () => {
+  const combined = combineTierlists([
+    { tiers: { 10: [1, 2], 5: [3] } },
+    { tiers: { 8: [1], 9: [3] } },
+  ]);
+  assert.deepEqual(combined.map(g => g.id), [2, 1, 3]);
+  assert.equal(combined[1].score, 9); // (10 + 8) / 2
+  assert.equal(combined[0].score, 9.5); // second of two in tier 10
+  assert.equal(combined[2].votes, 2);
+});

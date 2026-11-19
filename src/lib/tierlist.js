@@ -39,3 +39,24 @@ export function moveGame(tiers, id, destination, beforeId) {
   }
   return next;
 }
+// Score for a game at `index` within a tier of `size`: first place = tier, last approaches tier - 1.
+export function positionScore(tier, index, size) {
+  return Number(tier) - index / Math.max(size, 1);
+}
+
+// Combine all users' tier lists: average position-aware score per game, best first.
+export function combineTierlists(lists) {
+  const totals = new Map();
+  for (const list of lists || []) {
+    const tiers = normalizeTiers(list?.tiers);
+    for (const t of TIERS) tiers[t].forEach((id, index) => {
+      const entry = totals.get(id) || { id, sum: 0, votes: 0 };
+      entry.sum += positionScore(t, index, tiers[t].length);
+      entry.votes += 1;
+      totals.set(id, entry);
+    });
+  }
+  return [...totals.values()]
+    .map(({ id, sum, votes }) => ({ id, votes, score: sum / votes, tier: Math.min(10, Math.max(1, Math.ceil(sum / votes))) }))
+    .sort((a, b) => b.score - a.score || b.votes - a.votes || a.id - b.id);
+}

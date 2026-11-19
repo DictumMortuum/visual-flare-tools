@@ -31,3 +31,10 @@ export async function saveTierlist(email, name, tiers) {
   if (!response.ok) throw new Error(`Αποθήκευση: HTTP ${response.status}`);
   return response.json();
 }
+export async function fetchAllTierlists() {
+  const response = await fetch(`${ROOT}/rest/tierlists`);
+  if (response.status === 404) return [];
+  if (!response.ok) throw new Error(`Tier lists: HTTP ${response.status}`);
+  const body = await response.json();
+  return Array.isArray(body) ? body : [];
+}
