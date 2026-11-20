@@ -4,4 +4,5 @@
 - [x] Verify the updated community page and upload selection on desktop and mobile.
 - [x] Add BGG Top 100 tier board with drag-and-drop, search and accessible placement controls.
 - [x] Load and save each user's tier list through extapi, preserving unsaved drafts.
-- [x] Add PNG export (titles instead of covers restricted by BGG), test ranking rules and verify desktop/mobile flows.
+- [x] Add PNG export (titles instead of covers restricted by BGG), test ranking rules and verify desktop/mobile flows.- [ ] Cut duplicate/focus-triggered backend requests (broken pipes) on Eurovision.
+- [x] Make configuration load instantly from a local cache.

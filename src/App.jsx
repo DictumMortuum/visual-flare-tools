@@ -17,7 +17,11 @@ import HistoricLeaderboard from "./pages/HistoricEurovisionLeaderboard.jsx";
 import EventGallery from "./pages/EventGallery.jsx";
 import { UserProvider } from './context';
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: { refetchOnWindowFocus: false, staleTime: 60 * 1000, retry: 1 },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>

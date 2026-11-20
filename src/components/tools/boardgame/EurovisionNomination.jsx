@@ -188,23 +188,20 @@ const EurovisionNomination = () => {
     })
   );
 
-  // Fetch my nominations
-  const { data: myNominations = [], isLoading: nominationsLoading } = useQuery({
-    queryKey: ['my-nominations', user?.user_id, year],
+  // One request for the whole year; split into mine/others in memory.
+  const { data: allNominations = [], isLoading: nominationsLoading } = useQuery({
+    queryKey: ['nominations', year],
     queryFn: async () => {
-      if (!user?.user_id) return [];
-      
       const response = await fetch(
-        `${import.meta.env.VITE_API_ENDPOINT}/rest/eurovisionparticipations?filter=${encodeURIComponent(JSON.stringify({ email: user.user_id, year }))}`
+        `${import.meta.env.VITE_API_ENDPOINT}/rest/eurovisionparticipations?range=[0,500]&filter=${encodeURIComponent(JSON.stringify({ year }))}`
       );
-      
       if (!response.ok) throw new Error('Failed to fetch nominations');
-      const data = await response.json();
-      // Filter client-side to ensure only current user's nominations
-      return data.filter(n => n.email === user.user_id);
+      return response.json();
     },
     enabled: !!user?.user_id,
   });
+  const myNominations = React.useMemo(() => allNominations.filter(n => n.email === user?.user_id), [allNominations, user?.user_id]);
+  const othersNominations = React.useMemo(() => allNominations.filter(n => n.email !== user?.user_id), [allNominations, user?.user_id]);
 
   const { status: myVotesStatus, data: myVotes = [], isLoading: votesLoading } = useQuery({
     queryKey: ['my-votes', user?.user_id, year],
@@ -217,25 +214,6 @@ const EurovisionNomination = () => {
       
       if (!response.ok) throw new Error('Failed to fetch votes');
       return response.json();
-    },
-    onSuccess: () => {
-      setRankings(myVotes.votes)
-    },
-    enabled: !!user?.user_id,
-  });
-
-  // Fetch all other nominations for voting
-  const { data: othersNominations = [], isLoading: othersLoading } = useQuery({
-    queryKey: ['others-nominations', user?.user_id, year],
-    queryFn: async () => {
-      const response = await fetch(
-        `${import.meta.env.VITE_API_ENDPOINT}/rest/eurovisionparticipations?range=[0,500]&filter=${encodeURIComponent(JSON.stringify({ year }))}`
-      );
-      
-      if (!response.ok) throw new Error('Failed to fetch nominations');
-      return response.json().then(d => {
-        return d.filter(d => d.email !== user.user_id)
-      });
     },
     enabled: !!user?.user_id,
   });
@@ -265,8 +243,7 @@ const EurovisionNomination = () => {
       if (!response.ok) throw new Error('Failed to save nomination');
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['my-nominations']);
-      queryClient.invalidateQueries(['others-nominations']);
+      queryClient.invalidateQueries({ queryKey: ['nominations'] });
       toast.success('Nomination saved!');
     },
     onError: (error) => {
@@ -297,8 +274,7 @@ const EurovisionNomination = () => {
 
       if (!response.ok) throw new Error('Failed to remove nomination');
 
-      queryClient.invalidateQueries(['my-nominations']);
-      queryClient.invalidateQueries(['others-nominations']);
+      queryClient.invalidateQueries({ queryKey: ['nominations'] });
       toast.success('Nomination removed');
     } catch (error) {
       toast.error('Failed to remove nomination');
@@ -380,7 +356,7 @@ const EurovisionNomination = () => {
   };
 
   React.useEffect(() => {
-    const my_ids = myNominations.filter(d=> d.email === user.user_id).map(d => d.boardgame_id);
+    const my_ids = myNominations.map(d => d.boardgame_id);
     const voteList = othersNominations.filter(game => !my_ids.includes(game.boardgame_id));
 
     if (myVotesStatus === 'success' && myVotes && myVotes.id && myVotes.votes) {
@@ -524,7 +500,7 @@ const EurovisionNomination = () => {
             </TabsContent>
 
             <TabsContent value="vote" className="space-y-6 mt-6">
-              {othersLoading ? (
+              {nominationsLoading ? (
                 <p>Loading nominations...</p>
               ) : othersNominations.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
