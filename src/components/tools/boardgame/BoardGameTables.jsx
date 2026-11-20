@@ -35,7 +35,7 @@ const TableRouter = () => {
   const { data, isLoading } = useQuery({
     queryKey: ["table", id],
     queryFn: () => fetchTable({ id }),
-    initialData: {
+    placeholderData: {
       date: new Date(),
       participants: [],
       boardgame: {
