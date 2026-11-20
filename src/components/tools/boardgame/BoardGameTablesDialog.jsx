@@ -45,7 +45,7 @@ const SearchGames = ({ form, setSelectedGame }) => {
   const { data, isLoading } = useQuery({
     queryKey: ["boardgames_search", debouncedSearchTerm],
     queryFn: () => fetchBoardgames(debouncedSearchTerm),
-    initialData: [],
+    placeholderData: [],
     enabled: !!debouncedSearchTerm,
   });
 

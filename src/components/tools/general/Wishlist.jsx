@@ -36,7 +36,7 @@ const Container = ({ email }) => {
     queryKey: ["wishlist", email],
     queryFn: () => fetchWishlist({ email }),
     enabled: !!email,
-    initialData: [],
+    placeholderData: [],
   });
 
   if (isLoading) {

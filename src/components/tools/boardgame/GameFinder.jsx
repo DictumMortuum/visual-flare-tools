@@ -51,7 +51,7 @@ const GameFinder = () => {
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["game-finder"],
     queryFn: fetchGames,
-    initialData: {
+    placeholderData: {
       options: [],
       mechanics: [],
       categories: [],

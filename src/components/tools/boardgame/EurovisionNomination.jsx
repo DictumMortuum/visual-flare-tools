@@ -41,15 +41,16 @@ const SearchGames = ({ onSelectGame, selectedGame }) => {
   const debouncedSearchTerm = useDebounce(searchQuery, 1000);
 
   const fetchBoardgames = async (name) => {
-    const rs = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/rest/boardgames?filter={"name@eurovisionlike":"${name}"}&range=[0,9]`);
-    setShowResults(true);
+    const filter = encodeURIComponent(JSON.stringify({ "name@eurovisionlike": name }));
+    const rs = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/rest/boardgames?filter=${filter}&range=[0,9]`);
+    if (!rs.ok) throw new Error('Search failed');
     return rs.json();
   }
 
-  const { data, isLoading } = useQuery({
+  // No initialData: with the global staleTime it would count as fresh and skip the fetch.
+  const { data = [], isLoading } = useQuery({
     queryKey: ["boardgames_search", debouncedSearchTerm],
     queryFn: () => fetchBoardgames(debouncedSearchTerm),
-    initialData: [],
     enabled: !!debouncedSearchTerm,
   });
 
@@ -67,13 +68,14 @@ const SearchGames = ({ onSelectGame, selectedGame }) => {
         onChange={(e) => {
           setSearchQuery(e.target.value);
           setInput(e.target.value);
+          setShowResults(true);
         }}
         className="pl-9 h-12 rounded-xl text-base"
         autoFocus
       />
       <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
 
-      {showResults && data.length > 0 && (
+      {showResults && debouncedSearchTerm && Array.isArray(data) && data.length > 0 && (
         <div className="absolute z-50 top-full left-0 right-0 mt-2 bg-popover border rounded-xl shadow-xl max-h-80 overflow-y-auto">
           {data.map(game => (
             <div

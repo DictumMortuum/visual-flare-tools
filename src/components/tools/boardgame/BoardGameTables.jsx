@@ -72,7 +72,7 @@ const Container = ({ email }) => {
   const { data, isLoading } = useQuery({
     queryKey: ["tables"],
     queryFn: () => fetchTables(),
-    initialData: [],
+    placeholderData: [],
   });
 
   if (isLoading) {
