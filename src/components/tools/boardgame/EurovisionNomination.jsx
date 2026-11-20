@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Trophy, Search, X, GripVertical } from "lucide-react";
+import { Trophy, Search, X, GripVertical, Plus, RefreshCw, History, Users, PartyPopper, Scale, Crown } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDebounce } from '@uidotdev/usehooks';
@@ -13,6 +13,26 @@ import { DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSe
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import useConfig from '../../../hooks/useConfig';
+
+const CURRENT_YEAR = new Date().getFullYear();
+const FIRST_YEAR = 2025;
+const YEARS = Array.from({ length: CURRENT_YEAR - FIRST_YEAR + 1 }, (_, i) => CURRENT_YEAR - i);
+const CATEGORY_META = {
+  partyGame: { icon: PartyPopper, color: 'var(--nord-yellow)' },
+  midWeight: { icon: Scale, color: 'var(--nord-frost-2)' },
+  heavyWeight: { icon: Crown, color: 'var(--nord-red)' },
+};
+const pointColor = (pts) => pts === 12 ? 'var(--nord-yellow)' : pts === 10 ? 'var(--nord-frost-2)' : pts === 8 ? 'var(--nord-orange)' : pts > 0 ? 'var(--nord-frost-4)' : 'var(--muted)';
+
+// Ask extapi to refresh BGG metadata, then read the fresh record back.
+const refreshBoardgame = async (game) => {
+  try { await fetch(`${import.meta.env.VITE_API_ENDPOINT}/boardgames/info/${game.id}`); } catch (e) { /* ignore */ }
+  try {
+    const rs = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/rest/boardgames/${game.id}`);
+    if (rs.ok) { const fresh = await rs.json(); if (fresh && fresh.id) return fresh; }
+  } catch (e) { /* ignore */ }
+  return game;
+};
 
 const SearchGames = ({ onSelectGame, selectedGame }) => {
   const [input, setInput] = useState("");
@@ -48,12 +68,13 @@ const SearchGames = ({ onSelectGame, selectedGame }) => {
           setSearchQuery(e.target.value);
           setInput(e.target.value);
         }}
-        className="pl-9"
+        className="pl-9 h-12 rounded-xl text-base"
+        autoFocus
       />
       <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
 
       {showResults && data.length > 0 && (
-        <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-background border rounded-md shadow-lg max-h-60 overflow-y-auto">
+        <div className="absolute z-50 top-full left-0 right-0 mt-2 bg-popover border rounded-xl shadow-xl max-h-80 overflow-y-auto">
           {data.map(game => (
             <div
               key={game.id}
@@ -114,39 +135,21 @@ const SortableNominationCard = ({ nomination, rank }) => {
       {...attributes}
       {...listeners}
     >
-      <Card className="relative overflow-hidden cursor-grab active:cursor-grabbing hover:shadow-lg transition-all duration-200 border-2 hover:border-primary/20">
-        <CardContent className="flex items-center gap-3 p-2 bg-gradient-to-r from-background to-muted/10">
-          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-primary to-primary/70 text-primary-foreground font-bold text-sm shadow-md flex-shrink-0">
-            {rank}
+      <div className="group flex items-center gap-3 p-2 pr-3 rounded-xl border bg-card cursor-grab active:cursor-grabbing hover:shadow-md hover:border-primary/30 transition-all">
+        <div className="flex flex-col items-center justify-center w-12 h-12 rounded-lg font-black text-foreground flex-shrink-0" style={{ background: `hsl(${pointColor(rank)})` }}>
+          <span className="text-lg leading-none">{rank || '–'}</span>
+          <span className="text-[9px] uppercase tracking-wider opacity-70">pts</span>
+        </div>
+        <img src={nomination.boardgame?.square200 || '/placeholder.svg'} alt={nomination.boardgame?.name} className="w-14 h-14 object-cover rounded-lg flex-shrink-0" />
+        <div className="flex-1 min-w-0">
+          <h4 className="font-semibold truncate">{nomination.boardgame?.name}</h4>
+          <div className="flex flex-wrap items-center gap-1.5 mt-1 text-xs text-muted-foreground">
+            {nomination.boardgame?.year ? <span className="px-2 py-0.5 rounded-full bg-muted font-medium">{nomination.boardgame.year}</span> : null}
+            <span className="truncate">{emails.map(e => e.split('@')[0]).join(', ')}</span>
           </div>
-          <div className="relative group flex-shrink-0">
-            <img
-              src={nomination.boardgame.square200 || '/placeholder.svg'}
-              alt={nomination.boardgame.name}
-              className="w-16 h-16 object-cover rounded-lg shadow-md border-2 border-border group-hover:scale-105 transition-transform duration-200"
-            />
-            <div className="absolute inset-0 rounded-lg bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <h4 className="font-semibold text-base mb-0.5 truncate">{nomination.boardgame.name}</h4>
-            <div className="flex flex-col gap-0.5">
-              {nomination.boardgame.year && (
-                <span className="px-1.5 py-0.5 bg-muted rounded-full text-xs font-medium w-fit">
-                  {nomination.boardgame.year}
-                </span>
-              )}
-              <div className="text-xs text-muted-foreground">
-                {emails.map((email, idx) => (
-                  <div key={idx}>by {email}</div>
-                ))}
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center justify-center w-6 h-6 text-muted-foreground/50 flex-shrink-0">
-            <GripVertical className="w-4 h-4" />
-          </div>
-        </CardContent>
-      </Card>
+        </div>
+        <GripVertical className="w-5 h-5 text-muted-foreground/50 group-hover:text-muted-foreground flex-shrink-0" />
+      </div>
     </div>
   );
 };
@@ -157,6 +160,9 @@ const EurovisionNomination = () => {
   const [activeTab, setActiveTab] = useState('nominate');
   const [isAddGameDialogOpen, setIsAddGameDialogOpen] = useState(false);
   const [currentCategory, setCurrentCategory] = useState(null);
+  const [year, setYear] = useState(CURRENT_YEAR);
+  const [refreshing, setRefreshing] = useState(false);
+  const isArchive = year !== CURRENT_YEAR;
   const { value: EUROVISION_SHOW_VOTES_LIST } = useConfig(!!user?.user_id, "EUROVISION_SHOW_VOTES_LIST");
   const [rankings, setRankings] = useState({
     partyGame: [],
@@ -184,12 +190,12 @@ const EurovisionNomination = () => {
 
   // Fetch my nominations
   const { data: myNominations = [], isLoading: nominationsLoading } = useQuery({
-    queryKey: ['my-nominations', user?.user_id],
+    queryKey: ['my-nominations', user?.user_id, year],
     queryFn: async () => {
       if (!user?.user_id) return [];
       
       const response = await fetch(
-        `${import.meta.env.VITE_API_ENDPOINT}/rest/eurovisionparticipations?filter={"email":"${user.user_id}"}`
+        `${import.meta.env.VITE_API_ENDPOINT}/rest/eurovisionparticipations?filter=${encodeURIComponent(JSON.stringify({ email: user.user_id, year }))}`
       );
       
       if (!response.ok) throw new Error('Failed to fetch nominations');
@@ -201,12 +207,12 @@ const EurovisionNomination = () => {
   });
 
   const { status: myVotesStatus, data: myVotes = [], isLoading: votesLoading } = useQuery({
-    queryKey: ['my-votes', user?.user_id],
+    queryKey: ['my-votes', user?.user_id, year],
     queryFn: async () => {
       if (!user?.user_id) return [];
       
       const response = await fetch(
-        `${import.meta.env.VITE_API_ENDPOINT}/rest/eurovisionvotes/user/${user.user_id}`
+        `${import.meta.env.VITE_API_ENDPOINT}/rest/eurovisionvotes/user/${user.user_id}?year=${year}`
       );
       
       if (!response.ok) throw new Error('Failed to fetch votes');
@@ -220,10 +226,10 @@ const EurovisionNomination = () => {
 
   // Fetch all other nominations for voting
   const { data: othersNominations = [], isLoading: othersLoading } = useQuery({
-    queryKey: ['others-nominations', user?.user_id],
+    queryKey: ['others-nominations', user?.user_id, year],
     queryFn: async () => {
       const response = await fetch(
-        `${import.meta.env.VITE_API_ENDPOINT}/rest/eurovisionparticipations?range=[0,500]`
+        `${import.meta.env.VITE_API_ENDPOINT}/rest/eurovisionparticipations?range=[0,500]&filter=${encodeURIComponent(JSON.stringify({ year }))}`
       );
       
       if (!response.ok) throw new Error('Failed to fetch nominations');
@@ -251,6 +257,7 @@ const EurovisionNomination = () => {
             email: user.user_id,
             category,
             boardgame_id: game.id,
+            year,
           }),
         }
       );
@@ -270,8 +277,11 @@ const EurovisionNomination = () => {
   const handleGameSelect = (game) => {
     if (!currentCategory) return;
 
-    saveNominationMutation.mutate({ category: currentCategory, game });
-    setIsAddGameDialogOpen(false);
+    setRefreshing(true);
+    refreshBoardgame(game)
+      .then((fresh) => saveNominationMutation.mutateAsync({ category: currentCategory, game: fresh }))
+      .catch(() => {})
+      .finally(() => { setRefreshing(false); setIsAddGameDialogOpen(false); });
   };
 
   const handleRemoveNomination = async (id, category) => {
@@ -332,6 +342,7 @@ const EurovisionNomination = () => {
           body: JSON.stringify({
             email: user.user_id,
             votes: rankings,
+            year,
           }),
         }
       );
@@ -341,7 +352,7 @@ const EurovisionNomination = () => {
     onSuccess: () => {
       // queryClient.invalidateQueries(['my-nominations']);
       // queryClient.invalidateQueries(['others-nominations']);
-      toast.success('Nomination saved!');
+      toast.success('Votes saved!');
     },
     onError: (error) => {
       toast.error('Failed to save votes: ' + error.message);
@@ -370,10 +381,9 @@ const EurovisionNomination = () => {
 
   React.useEffect(() => {
     const my_ids = myNominations.filter(d=> d.email === user.user_id).map(d => d.boardgame_id);
-    console.log(my_ids, user);
     const voteList = othersNominations.filter(game => !my_ids.includes(game.boardgame_id));
 
-    if (myVotesStatus === 'success' && myVotes.id !== 0) {
+    if (myVotesStatus === 'success' && myVotes && myVotes.id && myVotes.votes) {
       setRankings(myVotes.votes);
     } else if (voteList.length > 0 && activeTab === 'vote') {
       const newRankings = {
@@ -383,15 +393,17 @@ const EurovisionNomination = () => {
       };
       setRankings(newRankings);
     }
-  }, [votesLoading, myVotes, othersNominations, myNominations, activeTab]);
+  }, [votesLoading, myVotes, othersNominations, myNominations, activeTab, year]);
 
   React.useEffect(() => {
-    if (EUROVISION_SHOW_VOTES_LIST) {
-      setActiveTab('vote')
+    if (EUROVISION_SHOW_VOTES_LIST || isArchive) {
+      setActiveTab(isArchive ? 'nominate' : 'vote')
     } else {
       setActiveTab('nominate')
     }
-  }, [EUROVISION_SHOW_VOTES_LIST])
+  }, [EUROVISION_SHOW_VOTES_LIST, isArchive])
+
+  React.useEffect(() => { setRankings({ partyGame: [], midWeight: [], heavyWeight: [] }); }, [year]);
 
   const categories = {
     partyGame: 'Party Game',
@@ -425,87 +437,90 @@ const EurovisionNomination = () => {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
-      {/* Header Section */}
-      <div className="text-center space-y-4">
-        <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full text-primary text-sm font-medium">
-          <Trophy className="h-4 w-4" />
-          Eurovision Boardgame Competition
+      <div className="relative overflow-hidden rounded-3xl border bg-card p-6 md:p-10">
+        <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full blur-3xl opacity-40" style={{ background: 'hsl(var(--nord-purple))' }} />
+        <div className="absolute -bottom-24 -left-16 w-64 h-64 rounded-full blur-3xl opacity-30" style={{ background: 'hsl(var(--nord-frost-2))' }} />
+        <div className="relative flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+          <div className="space-y-3">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold uppercase tracking-wider">
+              <Trophy className="h-3.5 w-3.5" /> Boardgame Eurovision
+            </div>
+            <h1 className="text-4xl md:text-5xl font-black tracking-tight">Eurovision {year}</h1>
+            <p className="text-muted-foreground max-w-xl">
+              {isArchive ? 'Αρχείο: δες τι πρότεινες και πώς ψήφισες εκείνη τη χρονιά.' : 'Πρότεινε ένα παιχνίδι ανά κατηγορία και βαθμολόγησε τις προτάσεις των άλλων.'}
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2" role="tablist" aria-label="Έτος">
+            {YEARS.map(y => (
+              <button key={y} onClick={() => setYear(y)} aria-pressed={y === year}
+                className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold border transition-colors ${y === year ? 'bg-primary text-primary-foreground border-primary' : 'bg-background hover:bg-muted'}`}>
+                {y !== CURRENT_YEAR && <History className="h-3.5 w-3.5" />}{y}
+              </button>
+            ))}
+          </div>
         </div>
-        <h1 className="text-4xl font-bold tracking-tight">Eurovision</h1>
-        <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-          Nominate your favorite games and vote on others' nominations
-        </p>
       </div>
 
-      <Card>
-        <CardContent className="pt-6">
+      <Card className="rounded-3xl">
+        <CardContent className="p-4 md:p-6">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="nominate">My Nominations</TabsTrigger>
-              <TabsTrigger value="vote" disabled={!EUROVISION_SHOW_VOTES_LIST}>Vote</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 h-12 rounded-xl">
+              <TabsTrigger value="nominate" className="rounded-lg">Οι προτάσεις μου</TabsTrigger>
+              <TabsTrigger value="vote" className="rounded-lg" disabled={!EUROVISION_SHOW_VOTES_LIST && !isArchive}>{isArchive ? 'Οι ψήφοι μου' : 'Ψηφοφορία'}</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="nominate" className="space-y-6 mt-6">
+            <TabsContent value="nominate" className="mt-6">
+              <div className="grid gap-4 md:grid-cols-3">
               {Object.entries(categories).map(([key, title]) => {
                 const nomination = myNominationsByCategory[key];
+                const { icon: Icon, color } = CATEGORY_META[key];
+                const alsoBy = nomination ? othersNominations.filter(d => d.boardgame_id === nomination.boardgame_id) : [];
                 return (
-                  <div key={key} className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="text-lg font-semibold flex items-center gap-2">
-                          <Trophy className="h-5 w-5 text-primary" />
-                          {title}
-                        </h3>
-                        <p className="text-sm text-muted-foreground">
-                          Nominate a game for this category
-                        </p>
+                  <div key={key} className="relative flex flex-col rounded-2xl border bg-card overflow-hidden">
+                    <div className="h-1.5" style={{ background: `hsl(${color})` }} />
+                    <div className="flex items-center gap-3 p-4">
+                      <div className="flex items-center justify-center w-10 h-10 rounded-xl" style={{ background: `hsl(${color} / 0.2)`, color: `hsl(${color})` }}>
+                        <Icon className="h-5 w-5" />
                       </div>
-                      {!nomination && (
-                        <Button
-                          variant="outline"
-                          onClick={() => openAddGameDialog(key)}
-                        >
-                          Nominate Game
-                        </Button>
-                      )}
+                      <h3 className="font-bold text-lg">{title}</h3>
                     </div>
-
                     {nomination ? (
-                      <Card>
-                        <CardContent className="flex items-center gap-4 p-4">
-                          <img
-                            src={nomination.boardgame.square200 || '/placeholder.svg'}
-                            alt={nomination.boardgame.name}
-                            className="w-20 h-20 object-cover rounded"
-                          />
-                          <div className="flex-1">
-                            <h4 className="font-semibold">{nomination.boardgame.name}</h4>
-                            <p className="text-sm text-muted-foreground">
-                              {nomination.boardgame.year}
-                            </p>
-                            {othersNominations.filter(d => d.boardgame_id === nomination.boardgame_id).map(i => (
-                              <p className="text-xs text-muted-foreground">
-                                Also nominated by {i.email}.
-                              </p>
-                            ))}
+                      <div className="flex-1 flex flex-col px-4 pb-4 gap-3">
+                        <div className="relative">
+                          <img src={nomination.boardgame?.square200 || '/placeholder.svg'} alt={nomination.boardgame?.name} className="w-full aspect-square object-cover rounded-xl" />
+                          {!isArchive && (
+                            <Button variant="secondary" size="icon" aria-label="Αφαίρεση πρότασης" className="absolute top-2 right-2 rounded-full shadow" onClick={() => handleRemoveNomination(nomination.id, key)}>
+                              <X className="w-4 h-4" />
+                            </Button>
+                          )}
+                        </div>
+                        <div>
+                          <h4 className="font-semibold leading-tight">{nomination.boardgame?.name}</h4>
+                          {nomination.boardgame?.year ? <p className="text-sm text-muted-foreground">{nomination.boardgame.year}</p> : null}
+                        </div>
+                        {alsoBy.length > 0 && (
+                          <div className="flex items-start gap-2 text-xs text-muted-foreground">
+                            <Users className="h-3.5 w-3.5 mt-0.5 flex-shrink-0" />
+                            <span>Το πρότειναν επίσης: {alsoBy.map(i => i.email.split('@')[0]).join(', ')}</span>
                           </div>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleRemoveNomination(nomination.id, key)}
-                          >
-                            <X className="w-4 h-4" />
-                          </Button>
-                        </CardContent>
-                      </Card>
+                        )}
+                      </div>
                     ) : (
-                      <div className="text-center py-8 text-muted-foreground border-2 border-dashed rounded-lg">
-                        No game nominated yet. Click "Nominate Game" to select one.
+                      <div className="flex-1 px-4 pb-4">
+                        {isArchive ? (
+                          <div className="flex items-center justify-center aspect-square rounded-xl border-2 border-dashed text-sm text-muted-foreground">Καμία πρόταση</div>
+                        ) : (
+                          <button onClick={() => openAddGameDialog(key)} className="w-full flex flex-col items-center justify-center gap-2 aspect-square rounded-xl border-2 border-dashed text-muted-foreground hover:border-primary hover:text-primary transition-colors">
+                            <Plus className="h-8 w-8" />
+                            <span className="font-medium">Πρότεινε παιχνίδι</span>
+                          </button>
+                        )}
                       </div>
                     )}
                   </div>
                 );
               })}
+              </div>
             </TabsContent>
 
             <TabsContent value="vote" className="space-y-6 mt-6">
@@ -517,20 +532,22 @@ const EurovisionNomination = () => {
                 </div>
               ) : (
                 <>
-                  <div className="flex items-center justify-between bg-muted/50 p-4 rounded-lg">
+                  {!isArchive && (
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-muted/50 p-4 rounded-xl">
                     <p className="text-sm text-muted-foreground">
-                      Drag games to rank them. Your top choice should be at position 1.
+                      Σύρε τα παιχνίδια για να τα κατατάξεις. Η πρώτη θέση παίρνει 12 βαθμούς.
                     </p>
-                    <Button onClick={handleSaveVotes}>Save Votes</Button>
+                    <Button onClick={handleSaveVotes} disabled={saveVotesMutation.isPending}>Αποθήκευση ψήφων</Button>
                   </div>
+                  )}
                   
                   {Object.entries(categories).map(([key, title]) => {
                     const categoryRankings = rankings[key] || [];
 
                     return (
                       <div key={key} className="space-y-4">
-                        <h3 className="text-lg font-semibold flex items-center gap-2 sticky top-0 bg-background py-2 z-10">
-                          <Trophy className="h-5 w-5 text-primary" />
+                        <h3 className="text-lg font-bold flex items-center gap-2 sticky top-0 bg-card py-2 z-10">
+                          {React.createElement(CATEGORY_META[key].icon, { className: 'h-5 w-5', style: { color: `hsl(${CATEGORY_META[key].color})` } })}
                           {title}
                         </h3>
                         {categoryRankings.length === 0 ? (
@@ -541,7 +558,7 @@ const EurovisionNomination = () => {
                           <DndContext
                             sensors={sensors}
                             collisionDetection={closestCenter}
-                            onDragEnd={(event) => handleDragEnd(event, key)}
+                            onDragEnd={(event) => !isArchive && handleDragEnd(event, key)}
                           >
                             <SortableContext
                               items={categoryRankings.map(n => n.id)}
@@ -576,16 +593,20 @@ const EurovisionNomination = () => {
       <Dialog open={isAddGameDialogOpen} onOpenChange={setIsAddGameDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Nominate a Game</DialogTitle>
+            <DialogTitle>Πρότεινε παιχνίδι</DialogTitle>
             <DialogDescription>
-              Search and select a game for {categories[currentCategory]}
+              Αναζήτησε και διάλεξε παιχνίδι για {categories[currentCategory]} ({year})
             </DialogDescription>
           </DialogHeader>
 
           <div className="py-4">
-            <SearchGames 
-              onSelectGame={handleGameSelect}
-            />
+            {refreshing ? (
+              <div className="flex items-center justify-center gap-2 py-8 text-muted-foreground">
+                <RefreshCw className="h-4 w-4 animate-spin" /> Ενημέρωση στοιχείων από το BGG...
+              </div>
+            ) : (
+              <SearchGames onSelectGame={handleGameSelect} />
+            )}
           </div>
         </DialogContent>
       </Dialog>
