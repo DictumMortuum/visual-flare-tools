@@ -37,6 +37,12 @@ const ToolPage = () => {
     return () => clearTimeout(timer);
   }, [id]);
 
+  useEffect(() => {
+    if (user === null) {
+      navigate("/login");
+    }
+  }, [user, navigate]);
+
   if (!tool) {
     return (
       <div className="container py-10">
@@ -65,12 +71,6 @@ const ToolPage = () => {
   }
 
   const renderToolComponent = () => {
-    useEffect(() => {
-      if (user === null) {
-        navigate("/login");
-      }
-    }, [user, navigate]);
-
     if (loading) {
       return (
         <div className="flex justify-center items-center py-20">
